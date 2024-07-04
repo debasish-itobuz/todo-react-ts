@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES6" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "module": "commonjs" /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */,
+    "outDir": "./dist" /* Do not transform or elide any imports or exports not marked as type-only, ensuring they are written in the output file's format based on the 'module' setting. */,
+    "allowSyntheticDefaultImports": true /* Allow 'import x from y' when a module doesn't have a default export. */,
+    "esModuleInterop": true /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true /* Skip type checking .d.ts files that are included with TypeScript. */,
+    "skipLibCheck": true,
+    "types": ["node", "express"] /* Skip type checking all .d.ts files. */
+  },
+  "include": ["./src"]
+}
