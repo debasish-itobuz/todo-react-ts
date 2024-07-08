@@ -13,10 +13,11 @@ export type TodoItem = {
   _id: string;
   title: string;
   status: Status;
-  checked:boolean;
+  checked: boolean;
 };
 
 const List: React.FC = () => {
+  const [error, setError] = useState("");
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [editTitle, setEditTitle] = useState("");
@@ -38,11 +39,12 @@ const List: React.FC = () => {
       });
 
       if (response && response.data && response.data.data) {
-        // Initialize todos with checked property based on status
-        const initialTodos: TodoItem[] = response.data.data.map((item: any) => ({
-          ...item,
-          checked: item.status === Status.completed, // Initialize checked based on status
-        }));
+        const initialTodos: TodoItem[] = response.data.data.map(
+          (item: any) => ({
+            ...item,
+            checked: item.status === Status.completed,
+          })
+        );
         setTodos(initialTodos);
       }
     } catch (error) {
@@ -51,9 +53,12 @@ const List: React.FC = () => {
   }
 
   const handleEdit = (id: string, title: string) => {
-    setEditMode(true);
-    setEditId(id);
-    setEditTitle(title);
+    const task = todos.find((todo) => todo._id === id);
+    if (task && task.status !== Status.completed) {
+      setEditMode(!editMode);
+      setEditId(id);
+      setEditTitle(title);
+    }
   };
 
   const handleUpdate = async (id: string, title: string, checked: boolean) => {
@@ -124,7 +129,7 @@ const List: React.FC = () => {
     );
     setTodos(updatedTodos);
 
-    const updatedTodo = updatedTodos.find(todo => todo._id === id);
+    const updatedTodo = updatedTodos.find((todo) => todo._id === id);
     if (updatedTodo) {
       await handleUpdate(id, updatedTodo.title, updatedTodo.checked);
     }
@@ -132,54 +137,77 @@ const List: React.FC = () => {
 
   return (
     <div>
-      <Form setIsCreate={setIsCreate} />
+      <Form setErrors={setError} errors={error} setIsCreate={setIsCreate} />
       <div className="flex flex-col items-start mx-auto w-[25rem] relative">
         {todos.map((item) => (
           <div
             key={item._id}
             className="m-2 gap-2 p-2 border w-full rounded overflow-auto h-11 flex justify-between items-center"
           >
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center w-80 overflow-scroll">
               <input
                 type="checkbox"
                 checked={item.checked}
+                onClick={() => setError("")}
                 onChange={() => handleChange(item._id)}
-                className=""
+                className="cursor-pointer"
               />
               {editMode && editId === item._id ? (
                 <input
                   type="text"
-                  className="w-full border rounded p-1"
+                  className=" border rounded p-1 w-56 "
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                 />
               ) : (
-                <div>{item.title}</div>
+                <div
+                  className={`${
+                    item.status === Status.completed ? " line-through" : ""
+                  }`}
+                >
+                  {item.title}
+                </div>
               )}
             </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center w-28">
               {editMode && editId === item._id ? (
                 <>
                   <button
-                    className="text-gray-900"
-                    onClick={() => handleUpdate(item._id, editTitle, item.checked)}
+                    className="text-gray-900 bg-green-300 p-1 rounded"
+                    onClick={() =>
+                      handleUpdate(item._id, editTitle, item.checked)
+                    }
                     disabled={!editTitle.trim()}
                   >
                     Save
                   </button>
-                  <button className="text-gray-900" onClick={handleCancelEdit}>
+                  <button
+                    className="text-gray-900 bg-gray-300 p-1 rounded"
+                    onClick={handleCancelEdit}
+                  >
                     Cancel
                   </button>
                 </>
               ) : (
                 <FaRegEdit
-                  className="text-xl cursor-pointer"
-                  onClick={() => handleEdit(item._id, item.title)}
+                  className={`text-xl ms-2 ${
+                    item.status === Status.completed
+                      ? " cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
+                  onClick={() => {
+                    handleEdit(item._id, item.title);
+                    setError("");
+                  }}
                 />
               )}
+
               <MdDeleteOutline
                 className="text-2xl cursor-pointer"
-                onClick={() => handleDeleteClick(item._id)}
+                onClick={() => {
+                  handleDeleteClick(item._id);
+                  setError("");
+                }}
               />
             </div>
           </div>
@@ -211,5 +239,3 @@ const List: React.FC = () => {
 };
 
 export default List;
-
-

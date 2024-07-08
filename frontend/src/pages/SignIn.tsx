@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// import { UserProvider } from "../components/UserContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,7 +9,6 @@ export default function Login() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
-  // const { login } = useContext(UserProvider);
 
   const handleLogIn = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,11 +38,19 @@ export default function Login() {
       );
       // console.log(user.data.data.userName);
 
-      localStorage.setItem("token", `Bearer ${data.data.token}`);
-      localStorage.setItem("user", user.data.data.userName);
+      console.log(user)
+      if (user.data.data.verified) {
+        localStorage.setItem("token", `Bearer ${data.data.token}`);
+        localStorage.setItem("user", user.data.data.userName);
       // login(user);
 
-      navigate("/todolist");
+        navigate("/todolist");
+        
+      } else {
+        console.log("Verify email first")
+        navigate("/login");
+      }
+      
     } catch (error) {
       console.error("Login error:", error);
       setEmailError("Invalid Credentials");

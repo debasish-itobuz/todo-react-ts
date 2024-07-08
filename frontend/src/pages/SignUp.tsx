@@ -50,13 +50,15 @@ export default function SignUp() {
         email: email,
         password: password,
       });
-  
+
       console.log("success:", response.data);
-      navigate("/login");
+      navigate("/verify-email");
+
     } catch (error) {
       console.error("Error:", error.message);
       setEmailError("User already exists");
     }
+    
   };
 
   return (

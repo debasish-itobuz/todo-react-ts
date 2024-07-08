@@ -9,18 +9,44 @@ import { User, userValidation } from "../validators/userValidators";
 import { catchBlock } from "../helper/commonCode";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ZodError } from "zod";
+import { sendVerificationEmail } from "../EmailVerify/mailVerify";
+import crypto from "crypto";
+
+const generateVerificationToken = (): string => {
+  const token = crypto.randomBytes(20).toString("hex");
+  return token;
+};
 
 const postUser = async (req: Request, res: Response) => {
   try {
     const user: User = req.body;
     userValidation.parse(user);
+
+    const verificationToken = generateVerificationToken();
+
     const alreadyExistUser = await userModel.findOne({ email: user.email });
     if (alreadyExistUser)
       return res.status(400).send({ message: "User already exists" });
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(user.password, salt);
-    const data = await userModel.create({ ...user, password: hashedPassword });
+    const data = await userModel.create({
+      ...user,
+      password: hashedPassword,
+      verificationToken: verificationToken,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const check: any = await sendVerificationEmail(
+      data.email,
+      data.verificationToken
+    );
+    console.log("check = ", check);
+
+    if (check) {
+      console.log("Verification send successfully!");
+    }
+
     return res
       .status(200)
       .send({ data: data, message: "User added successfully" });
@@ -117,4 +143,31 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export { postUser, loginUser, updateUser, deleteUser, getUser };
+const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  try {
+    // Find the user by the verification token
+    const user = await userModel.findOne({ verificationToken: token });
+    console.log("user=", user);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found or token expired" });
+    }
+
+    // Mark the user as verified (update your User schema accordingly)
+    user.verified = true;
+    user.verificationToken = "";
+
+    // Save the updated user
+    const check = await user.save();
+    console.log("check=", check);
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    res.status(500).json({ error: "Failed to verify email" });
+  }
+};
+
+export { postUser, loginUser, updateUser, deleteUser, getUser, verifyEmail };

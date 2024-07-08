@@ -2,18 +2,20 @@ import axios from "axios";
 import React, { useState } from "react";
 export default function Form({
   setIsCreate,
+  setErrors,
+  errors,
 }: {
   setIsCreate: React.Dispatch<React.SetStateAction<boolean>>;
-  
+  setErrors: React.Dispatch<React.SetStateAction<string>>;
+  errors: string;
 }) {
   const [todoText, setTodoText] = useState("");
-  const [error, setError] = useState("");
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
 
     if (!todoText.trim()) {
-      setError("Todo text cannot be empty");
+      setErrors("Todo text cannot be empty");
       return;
     }
 
@@ -36,7 +38,7 @@ export default function Form({
       console.log("Response from server:", response.data);
 
       setTodoText("");
-      setError("");
+      setErrors("");
     } catch (error) {
       console.error("Error posting data:", error);
     }
@@ -44,7 +46,7 @@ export default function Form({
 
   const handleChange = (event: any) => {
     setTodoText(event.target.value);
-    setError("");
+    setErrors("");
   };
 
   return (
@@ -73,7 +75,7 @@ export default function Form({
         </button>
       </div>
       <div className="min-h-7">
-        {error && <p className="text-red-500 text-start">{error}</p>}
+        {errors && <p className="text-red-500 text-start">{errors}</p>}
       </div>
     </form>
   );
