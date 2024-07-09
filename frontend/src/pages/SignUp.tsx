@@ -10,8 +10,9 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleSignUp = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,14 +52,17 @@ export default function SignUp() {
         password: password,
       });
 
-      console.log("success:", response.data);
-      navigate("/verify-email");
+      // console.log("success:", response.data);
+      // console.log("success:", response.data.data.verificationToken);
 
+      // navigate(`/verify-email?token=${response.data.data.verificationToken}`);
+
+      setSuccessMessage("SignUp Done. Please Check your mail..");
     } catch (error) {
       console.error("Error:", error.message);
       setEmailError("User already exists");
+      setSuccessMessage(" ");
     }
-    
   };
 
   return (
@@ -152,6 +156,9 @@ export default function SignUp() {
               Log In
             </Link>
           </div>
+          {successMessage && (
+            <p className="text-green-500 text-s mt-1 pt-3">{successMessage}</p>
+          )}
         </div>
       </div>
     </section>

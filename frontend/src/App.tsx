@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signUp" element={<SignUp />} />
-        {/* <Route path="/verify-email" element={<VerifyEmail />} /> */}
+        {/* <Route path="/verify" element={<VerifyEmail />} /> */}
         <Route path="/todolist" element={<TodoList />} />
         <Route path="/todolist" element={<TodoList />} />
         <Route path={adminRoutes.verifyEmail.fullpath} element={<VerifyUser />} />

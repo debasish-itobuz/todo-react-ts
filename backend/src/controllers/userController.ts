@@ -23,6 +23,7 @@ const postUser = async (req: Request, res: Response) => {
     userValidation.parse(user);
 
     const verificationToken = generateVerificationToken();
+    console.log(verificationToken);
 
     const alreadyExistUser = await userModel.findOne({ email: user.email });
     if (alreadyExistUser)
@@ -41,15 +42,17 @@ const postUser = async (req: Request, res: Response) => {
       data.email,
       data.verificationToken
     );
+
     console.log("check = ", check);
 
     if (check) {
+      // localStorage.setItem("verificationToken", data.verificationToken);
       console.log("Verification send successfully!");
     }
 
-    return res
-      .status(200)
-      .send({ data: data, message: "User added successfully" });
+    // localStorage.setItem("verificationToken", data.verificationToken);
+    res.status(200).send({ data: data, message: "User added successfully " });
+    console.log(data.verificationToken);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
@@ -145,10 +148,13 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.body;
+  console.log(token);
 
   try {
     // Find the user by the verification token
-    const user = await userModel.findOne({ verificationToken: token });
+    const user = await userModel.findOne({
+      verificationToken: token,
+    });
     console.log("user=", user);
 
     if (!user) {
@@ -158,6 +164,8 @@ const verifyEmail = async (req: Request, res: Response) => {
     // Mark the user as verified (update your User schema accordingly)
     user.verified = true;
     user.verificationToken = "";
+
+    // await user.save();
 
     // Save the updated user
     const check = await user.save();
