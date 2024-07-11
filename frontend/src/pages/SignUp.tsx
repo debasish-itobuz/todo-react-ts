@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 export default function SignUp() {
@@ -11,8 +11,6 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  // const navigate = useNavigate();
 
   const handleSignUp = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -52,12 +50,17 @@ export default function SignUp() {
         password: password,
       });
 
-      // console.log("success:", response.data);
-      // console.log("success:", response.data.data.verificationToken);
+      setSuccessMessage(
+        "SignUp Done. Please Check your mail to verify your email.."
+      );
 
-      // navigate(`/verify-email?token=${response.data.data.verificationToken}`);
-
-      setSuccessMessage("SignUp Done. Please Check your mail..");
+      setTimeout(() => {
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setSuccessMessage("");
+      }, 3000);
     } catch (error) {
       console.error("Error:", error.message);
       setEmailError("User already exists");

@@ -38,7 +38,14 @@ const Header = () => {
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <h3 className="text-gray-900">Hello, {user}</h3>
+            <h3
+              className="text-gray-900 cursor-pointer"
+              onClick={() => {
+                navigate("/user-profile/");
+              }}
+            >
+              Hello, {user}
+            </h3>
             <button
               className="text-gray-900"
               onClick={() => {
@@ -56,4 +63,3 @@ const Header = () => {
 };
 
 export default Header;
-

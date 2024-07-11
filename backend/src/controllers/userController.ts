@@ -43,16 +43,14 @@ const postUser = async (req: Request, res: Response) => {
       data.verificationToken
     );
 
-    console.log("check = ", check);
+    // console.log("check = ", check);
 
     if (check) {
-      // localStorage.setItem("verificationToken", data.verificationToken);
-      console.log("Verification send successfully!");
+      console.log("Verification link send successfully!");
     }
 
-    // localStorage.setItem("verificationToken", data.verificationToken);
     res.status(200).send({ data: data, message: "User added successfully " });
-    console.log(data.verificationToken);
+    // console.log(data.verificationToken);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
@@ -70,6 +68,9 @@ const loginUser = async (req: Request, res: Response) => {
 
     const isCorrectPassword = bcrypt.compareSync(password, data.password);
     if (data && isCorrectPassword) {
+      // if (!data.verified)
+      //   return res.status(400).send({ message: "Please verify..." });
+
       const token = jwt.sign(
         { user: { userId: data._id, email: data.email } },
         `${process.env.SECRET_KEY}`,
@@ -92,7 +93,7 @@ const loginUser = async (req: Request, res: Response) => {
 const getUser = async (req: Request, res: Response) => {
   try {
     const data = await userModel.findById(req.query.id);
-    // console.log(data)
+
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
       .status(200)
@@ -109,12 +110,13 @@ const updateUser = async (req: Request, res: Response) => {
     const user: User = req.body;
     userValidation.parse(user);
 
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(user.password, salt);
+    // const salt = bcrypt.genSaltSync(10);
+    // const hashedPassword = bcrypt.hashSync(user.password, salt);
+
+    console.log("userupdated", user, req.query.id);
 
     const data = await userModel.findByIdAndUpdate(req.query.id, {
       ...user,
-      hashedPassword,
     });
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
@@ -148,14 +150,14 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.body;
-  console.log(token);
+  // console.log(token);
 
   try {
     // Find the user by the verification token
     const user = await userModel.findOne({
       verificationToken: token,
     });
-    console.log("user=", user);
+    // console.log("user=", user);
 
     if (!user) {
       return res.status(404).json({ error: "User not found or token expired" });
@@ -165,11 +167,11 @@ const verifyEmail = async (req: Request, res: Response) => {
     user.verified = true;
     user.verificationToken = "";
 
-    // await user.save();
+    await user.save();
 
     // Save the updated user
-    const check = await user.save();
-    console.log("check=", check);
+    // const check = await user.save();
+    // console.log("check=", check);
 
     res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {

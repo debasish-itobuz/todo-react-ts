@@ -2,8 +2,12 @@ import mongoose, { Document } from "mongoose";
 
 export interface User extends Document {
   userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone: number;
   password: string;
+  profilePicture: string;
   verified: boolean;
   verificationToken: string;
   createdAt: Date;
@@ -16,9 +20,25 @@ const userSchema = new mongoose.Schema<User>(
       type: String,
       required: true,
     },
+    firstName: {
+      type: String,
+      default: "",
+    },
+    lastName: {
+      type: String,
+      default: "",
+    },
     email: {
       type: String,
       required: true,
+    },
+    profilePicture: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: Number,
+      default: 0,
     },
     password: {
       type: String,
@@ -26,11 +46,11 @@ const userSchema = new mongoose.Schema<User>(
     },
     verified: {
       type: Boolean,
-      default: false, 
+      default: false,
     },
     verificationToken: {
       type: String,
-      default: "", 
+      default: "",
     },
   },
   { timestamps: true }

@@ -4,11 +4,10 @@ import queryString from "query-string";
 import { Link } from "react-router-dom";
 
 export default function VerifyUser() {
-  const queryParams = queryString.parse(location.search);
-  //   console.log(queryParams);
+  const parsed = queryString.parse(location.search);
   const verifyEmail = async () => {
     try {
-      const token = queryParams.token;
+      const token = parsed.token;
 
       if (token) {
         console.log("Token received:", token);
@@ -33,7 +32,7 @@ export default function VerifyUser() {
   }, []);
 
   return (
-    <div className="mx-auto text-center mt-24 bg-slate-200 rounded w-48 p-4">
+    <div className="mx-auto text-center mt-32 bg-slate-200 rounded w-60 px-5 py-8">
       <div>You are verified.. </div>
       <div className="flex flex-col items-center justify-center">
         <Link to="/login">

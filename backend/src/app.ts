@@ -9,7 +9,6 @@ import todoRoutes from "./routes/todoRoute";
 import userRoutes from "./routes/userRoute";
 import connectToDb from "./config/dbConnection";
 connectToDb();
-console.log(env);
 
 const app: Application = express();
 const PORT = env.PORT;

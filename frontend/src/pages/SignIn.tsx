@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate  } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Login() {
@@ -26,31 +26,33 @@ export default function Login() {
       });
 
       const data = response.data;
+      console.log(data);
 
       if (data.data.email !== email) {
         setEmailError("Invalid Credentials");
         return;
       }
 
+      // else if (!data.data.verified) {
+      //   setEmailError("Please verify your email first.");
+      //   return;
+      // }
+
       const user = await axios.get(
         `http://localhost:4001/user/get-user?id=${data.data.id}`
       );
-      // console.log(user.data.data.userName);
 
-      console.log(user)
       if (user.data.data.verified) {
+        const userDetailsJSON = JSON.stringify(user.data.data);
+        // console.log(user.data.data);
         localStorage.setItem("token", `Bearer ${data.data.token}`);
         localStorage.setItem("user", user.data.data.userName);
-      // login(user);
+        localStorage.setItem("userDetails", userDetailsJSON);
 
         navigate("/todolist");
-        
       } else {
-        // console.log("Verify email first")
-        // navigate("/login");
         setEmailError("Please verify your email first.");
       }
-      
     } catch (error) {
       console.error("Login error:", error);
       setEmailError("Invalid Credentials");
@@ -128,5 +130,3 @@ export default function Login() {
     </section>
   );
 }
-
-
