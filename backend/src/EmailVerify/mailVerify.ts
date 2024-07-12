@@ -26,8 +26,6 @@ export const sendVerificationEmail = async (
     subject: "Verify Your Email",
     text: `Hello, please click on the following link to verify your email: ${verificationLink}`,
   };
-  console.log("toEmail", toEmail);
-  console.log("verificationToken", verificationToken);
 
   // Send the email
   const mail = transporter.sendMail(mailOptions, (error, info) => {

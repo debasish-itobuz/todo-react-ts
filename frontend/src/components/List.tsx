@@ -138,8 +138,8 @@ const List: React.FC = () => {
 
   const filteredTodos = todos.filter((todo) => {
     if (filter === "all") return true;
-    else if (filter === "todos") return (todo.status === Status.todo);
-    else if (filter === "completed") return (todo.status === Status.completed);
+    else if (filter === "todos") return todo.status === Status.todo;
+    else if (filter === "completed") return todo.status === Status.completed;
     else return true;
   });
 
@@ -147,38 +147,42 @@ const List: React.FC = () => {
     <div>
       <Form setErrors={setError} errors={error} setIsCreate={setIsCreate} />
 
-      {todos.length === 0 ?(
-        <p className="text-center text-gray-500">
-          Empty list, add tasks..
-        </p>
-      ) :
-      (
+      {todos.length === 0 ? (
+        <p className="text-center text-gray-500">Empty list, add tasks..</p>
+      ) : (
         <div className="flex justify-center gap-4 mb-4">
-          <button className={`px-3 py-1 rounded ${
-            filter === "all" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`} onClick={()=> setFilter("all")}>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === "all" ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => setFilter("all")}
+          >
             All
           </button>
-          <button className={`px-3 py-1 rounded ${
-            filter === "todos" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`} onClick={()=>setFilter('todos')}>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === "todos" ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => setFilter("todos")}
+          >
             ToDos
           </button>
-          <button className={`px-3 py-1 rounded ${
-            filter === "completed" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`} onClick={()=>setFilter("completed")}>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === "completed" ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => setFilter("completed")}
+          >
             Completed
           </button>
         </div>
       )}
 
-
-
-      <div className="flex flex-col items-start mx-auto w-[25rem] relative">
+      <div className="flex flex-col items-start mx-auto w-[25rem] min-h-[5rem] max-h-[33rem] relative overflow-y-scroll">
         {filteredTodos.map((item) => (
           <div
             key={item._id}
-            className="m-2 gap-2 p-2 border w-full rounded overflow-auto h-11 flex justify-between items-center"
+            className="m-2 gap-2 p-2 border w-96 rounded overflow-auto flex flex-shrink-0  justify-between items-center"
           >
             <div className="flex gap-4 items-center w-80 overflow-scroll">
               <input

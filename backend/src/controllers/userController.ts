@@ -23,7 +23,7 @@ const postUser = async (req: Request, res: Response) => {
     userValidation.parse(user);
 
     const verificationToken = generateVerificationToken();
-    console.log(verificationToken);
+    // console.log(verificationToken);
 
     const alreadyExistUser = await userModel.findOne({ email: user.email });
     if (alreadyExistUser)
@@ -42,8 +42,6 @@ const postUser = async (req: Request, res: Response) => {
       data.email,
       data.verificationToken
     );
-
-    // console.log("check = ", check);
 
     if (check) {
       console.log("Verification link send successfully!");
@@ -68,9 +66,6 @@ const loginUser = async (req: Request, res: Response) => {
 
     const isCorrectPassword = bcrypt.compareSync(password, data.password);
     if (data && isCorrectPassword) {
-      // if (!data.verified)
-      //   return res.status(400).send({ message: "Please verify..." });
-
       const token = jwt.sign(
         { user: { userId: data._id, email: data.email } },
         `${process.env.SECRET_KEY}`,
@@ -110,10 +105,7 @@ const updateUser = async (req: Request, res: Response) => {
     const user: User = req.body;
     userValidation.parse(user);
 
-    // const salt = bcrypt.genSaltSync(10);
-    // const hashedPassword = bcrypt.hashSync(user.password, salt);
-
-    console.log("userupdated", user, req.query.id);
+    // console.log("userupdated", user, req.query.id);
 
     const data = await userModel.findByIdAndUpdate(req.query.id, {
       ...user,
@@ -150,28 +142,20 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.body;
-  // console.log(token);
 
   try {
-    // Find the user by the verification token
     const user = await userModel.findOne({
       verificationToken: token,
     });
-    // console.log("user=", user);
 
     if (!user) {
       return res.status(404).json({ error: "User not found or token expired" });
     }
 
-    // Mark the user as verified (update your User schema accordingly)
     user.verified = true;
     user.verificationToken = "";
 
     await user.save();
-
-    // Save the updated user
-    // const check = await user.save();
-    // console.log("check=", check);
 
     res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {
