@@ -1,5 +1,5 @@
 import express, { Application, ErrorRequestHandler } from "express";
-import bodyParser from "body-parser";
+// import bodyParser from "body-parser";
 import { config } from "dotenv";
 config();
 import { env } from "./env";
@@ -13,7 +13,7 @@ connectToDb();
 const app: Application = express();
 const PORT = env.PORT;
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 app.use("/user", userRoutes);

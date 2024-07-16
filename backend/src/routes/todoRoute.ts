@@ -2,7 +2,7 @@ import { Router } from "express";
 import verifyToken from "../middlewares/tokenVerify";
 import {
   deleteTodo,
-  filterTodo,
+  filterTodos,
   getTodos,
   getTodoById,
   postTodo,
@@ -16,7 +16,7 @@ router.use(verifyToken);
 router.post("/create", postTodo);
 router.get("/get", getTodos);
 router.get("/get-by-id", getTodoById);
-router.get("/get-by-filter", filterTodo);
+router.get("/get-by-filter", filterTodos);
 router.put("/update", updateTodo);
 router.delete("/delete", deleteTodo);
 

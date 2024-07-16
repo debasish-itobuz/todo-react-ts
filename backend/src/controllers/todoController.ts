@@ -88,7 +88,7 @@ const deleteTodo = async (req: Request, res: Response) => {
   }
 };
 
-const filterTodo = async (req: Request, res: Response) => {
+const filterTodos = async (req: Request, res: Response) => {
   try {
     const { status } = req.query;
     const data = await todoModel.find({ status: status });
@@ -105,4 +105,4 @@ const filterTodo = async (req: Request, res: Response) => {
   }
 };
 
-export { postTodo, getTodos, getTodoById, updateTodo, deleteTodo, filterTodo };
+export { postTodo, getTodos, getTodoById, updateTodo, deleteTodo, filterTodos };

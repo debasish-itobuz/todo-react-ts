@@ -30,7 +30,7 @@ router.post(
       }
       res.status(200).send({
         message: "File uploaded successfully",
-        imageUrl: `/uploads/${Date.now() + file.filename}`,
+        imageUrl: `/uploads/${file.filename}`,
       });
     } catch (error) {
       console.error("Error uploading file:", error);

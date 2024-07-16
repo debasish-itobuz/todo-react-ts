@@ -24,6 +24,7 @@ const UserProfile: React.FC = () => {
 
       if (storedUserDetails) {
         const userData = JSON.parse(storedUserDetails);
+        console.log(userData.profilePicture);
 
         setFormData({
           id: userData.id || userData._id,
@@ -54,15 +55,26 @@ const UserProfile: React.FC = () => {
       setSelectedFile(file);
 
       const reader = new FileReader();
+      reader.readAsDataURL(file);
       reader.onloadend = () => {
         setFormData({
           ...formData,
           profilePicture: reader.result as string,
         });
       };
-      reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    const storedProfilePicture = localStorage.getItem("profilePicture");
+    handleFileChange;
+    if (storedProfilePicture) {
+      setFormData({
+        ...formData,
+        profilePicture: storedProfilePicture,
+      });
+    }
+  }, []);
 
   const handleUpdateClick = () => {
     setIsEditMode(true);
@@ -132,6 +144,8 @@ const UserProfile: React.FC = () => {
       }, 2000);
     }
   };
+
+  console.log(formData.profilePicture);
 
   return (
     <div className="max-w-md mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
@@ -274,4 +288,3 @@ const UserProfile: React.FC = () => {
 };
 
 export default UserProfile;
-

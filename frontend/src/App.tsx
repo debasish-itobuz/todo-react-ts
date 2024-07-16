@@ -9,6 +9,8 @@ import { adminRoutes } from "./routes";
 import UserProfile from "./pages/UserProfile";
 
 function App() {
+  console.log("oijio:", adminRoutes.verifyEmail.fullpath);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -16,9 +18,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signUp" element={<SignUp />} />
         <Route path="/todolist" element={<TodoList />} />
-        <Route path="/todolist" element={<TodoList />} />
         <Route path="/user-profile" element={<UserProfile />} />
-        <Route path={adminRoutes.verifyEmail.fullpath} element={<VerifyUser />} />
+        <Route
+          path={adminRoutes.verifyEmail.fullpath}
+          element={<VerifyUser />}
+        />
       </Routes>
     </BrowserRouter>
   );
