@@ -18,26 +18,25 @@ const UserProfile: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const loadUserDataFromLocalStorage = () => {
+    const storedUserDetails = localStorage.getItem("userDetails");
+
+    if (storedUserDetails) {
+      const userData = JSON.parse(storedUserDetails);
+
+      setFormData({
+        id: userData.id || userData._id,
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        email: userData.email || "",
+        password: userData.password || "",
+        phone: userData.phone || "",
+        profilePicture: userData.profilePicture || "",
+      });
+    }
+  };
+
   useEffect(() => {
-    const loadUserDataFromLocalStorage = () => {
-      const storedUserDetails = localStorage.getItem("userDetails");
-
-      if (storedUserDetails) {
-        const userData = JSON.parse(storedUserDetails);
-        console.log(userData.profilePicture);
-
-        setFormData({
-          id: userData.id || userData._id,
-          firstName: userData.firstName || "",
-          lastName: userData.lastName || "",
-          email: userData.email || "",
-          password: userData.password || "",
-          phone: userData.phone || "",
-          profilePicture: userData.profilePicture || "",
-        });
-      }
-    };
-
     loadUserDataFromLocalStorage();
   }, []);
 
@@ -53,60 +52,20 @@ const UserProfile: React.FC = () => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setSelectedFile(file);
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setFormData({
-          ...formData,
-          profilePicture: reader.result as string,
-        });
-      };
     }
   };
-
-  useEffect(() => {
-    const storedProfilePicture = localStorage.getItem("profilePicture");
-    handleFileChange;
-    if (storedProfilePicture) {
-      setFormData({
-        ...formData,
-        profilePicture: storedProfilePicture,
-      });
-    }
-  }, []);
 
   const handleUpdateClick = () => {
     setIsEditMode(true);
-  };
-
-  const handleUploadClick = () => {
-    const fileInput = document.getElementById("fileInput");
-    if (fileInput) {
-      fileInput.click();
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      let profilePictureUrl = formData.profilePicture;
-
       if (selectedFile) {
         const formData = new FormData();
-        formData.append("profilePicture", selectedFile);
-
-        const response = await axios.post(
-          "http://localhost:4001/user/upload-profile-picture",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        profilePictureUrl = response.data.imageUrl;
+        formData.append("file", selectedFile);
       }
 
       await axios.put(`http://localhost:4001/user/update?id=${formData.id}`, {
@@ -115,7 +74,7 @@ const UserProfile: React.FC = () => {
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
-        profilePicture: profilePictureUrl,
+        profilePicture: formData.profilePicture,
       });
 
       console.log("User profile updated successfully");
@@ -124,11 +83,11 @@ const UserProfile: React.FC = () => {
         "userDetails",
         JSON.stringify({
           ...formData,
-          profilePicture: profilePictureUrl,
         })
       );
 
       setFormError("");
+
       setShowSuccessMessage(true);
       setTimeout(() => {
         setShowSuccessMessage(false);
@@ -144,8 +103,6 @@ const UserProfile: React.FC = () => {
       }, 2000);
     }
   };
-
-  console.log(formData.profilePicture);
 
   return (
     <div className="max-w-md mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
@@ -233,8 +190,8 @@ const UserProfile: React.FC = () => {
                 accept="image/*"
                 onChange={handleFileChange}
                 className="sr-only"
-                id="fileInput"
-                name="fileInput"
+                id="profilePicture"
+                name="profilePicture"
                 disabled={!isEditMode}
               />
               <label className="cursor-pointer inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
@@ -248,15 +205,6 @@ const UserProfile: React.FC = () => {
                   <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"></span>
                 )}
               </label>
-              {isEditMode && (
-                <button
-                  type="button"
-                  className="ml-4 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600"
-                  onClick={handleUploadClick}
-                >
-                  Upload
-                </button>
-              )}
             </div>
           </div>
         </div>

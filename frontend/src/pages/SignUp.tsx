@@ -12,7 +12,8 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (name.length < 3) {
@@ -150,6 +151,7 @@ export default function SignUp() {
           <button
             className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
             onClick={handleSignUp}
+            type="submit"
           >
             Submit
           </button>

@@ -9,7 +9,8 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogIn = async () => {
+  const handleLogIn = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
@@ -111,6 +112,7 @@ export default function Login() {
           <button
             className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
             onClick={handleLogIn}
+            type="submit"
           >
             Login
           </button>

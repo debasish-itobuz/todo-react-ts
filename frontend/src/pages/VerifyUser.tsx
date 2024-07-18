@@ -9,8 +9,6 @@ export default function VerifyUser() {
     try {
       const token = parsed.token;
 
-      console.log("token:", token);
-
       if (token) {
         console.log("Token received:", token);
 
