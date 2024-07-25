@@ -40,7 +40,7 @@ export default function Login() {
 
       if (user.data.data.verified) {
         const userDetailsJSON = JSON.stringify(user.data.data);
-        // console.log(user.data.data);
+        
         localStorage.setItem("token", `Bearer ${data.data.token}`);
         localStorage.setItem("user", user.data.data.userName);
         localStorage.setItem("userDetails", userDetailsJSON);

@@ -124,16 +124,28 @@ const List: React.FC = () => {
     setDeleteConfirmationId("");
   };
 
-  const handleChange = async (id: string) => {
-    const updatedTodos = todos.map((todo) =>
-      todo._id === id ? { ...todo, checked: !todo.checked } : todo
-    );
-    setTodos(updatedTodos);
+  // const handleChange = async (id: string) => {
+  //   const updatedTodos = todos.map((todo) =>
+  //     todo._id === id ? { ...todo, checked: !todo.checked } : todo
+  //   );
+  //   setTodos(updatedTodos);
 
-    const updatedTodo = updatedTodos.find((todo) => todo._id === id);
-    if (updatedTodo) {
-      await handleUpdate(id, updatedTodo.title, updatedTodo.checked);
-    }
+  //   const updatedTodo = updatedTodos.find((todo) => todo._id === id);
+  //   if (updatedTodo) {
+  //     await handleUpdate(id, updatedTodo.title, updatedTodo.checked);
+  //   }
+  // };
+
+  const handleChange = async (id: string) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo._id === id) {
+        const updatedTodo = { ...todo, checked: !todo.checked };
+        handleUpdate(id, updatedTodo.title, updatedTodo.checked); // Update the todo item
+        return updatedTodo;
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
   };
 
   const filteredTodos = todos.filter((todo) => {

@@ -16,7 +16,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signUp" element={<SignUp />} />
         <Route path="/todolist" element={<TodoList />} />
-        <Route path="/todolist" element={<TodoList />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path={adminRoutes.verifyEmail.fullpath} element={<VerifyUser />} />
       </Routes>
