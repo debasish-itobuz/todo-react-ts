@@ -5,10 +5,7 @@ export enum Status {
   completed = "Completed",
 }
 
-const options: ["ToDo", "Completed"] = [
-  "ToDo",
-  "Completed",
-];
+const options: ["ToDo", "Completed"] = ["ToDo", "Completed"];
 
 export const todoValidation = z
   .object({

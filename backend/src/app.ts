@@ -14,11 +14,15 @@ const PORT = env.PORT;
 
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from the "uploads" directory
+app.use("/uploads", express.static("uploads"));
+
 app.use("/user", userRoutes);
 app.use("/todo", todoRoutes);
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+// Error handler middleware
+const errorHandler: ErrorRequestHandler = (err, req, res) => {
   res.status(err.status || 500);
   res.send({
     status: err.status || 500,

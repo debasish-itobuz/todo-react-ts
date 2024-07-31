@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import { GlobalContext } from "../components/UserContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -8,8 +9,9 @@ export default function Login() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
+  const { userDetails, setUserDetails, setToken } = useContext(GlobalContext);
 
-  const handleLogIn = async (e: { preventDefault: () => void }) => {
+  const handleLogIn = async (e) => {
     e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,27 +29,36 @@ export default function Login() {
       });
 
       const data = response.data;
-      console.log(data);
 
       if (data.data.email !== email) {
         setEmailError("Invalid Credentials");
         return;
       }
 
-      const user = await axios.get(
-        `http://localhost:4001/user/get-user?id=${data.data.id}`
-      );
+      const getUser = async () => {
+        try {
+          const response = await axios.get(
+            `http://localhost:4001/user/get-user?id=${data.data.id}`
+          );
 
-      if (user.data.data.verified) {
-        const userDetailsJSON = JSON.stringify(user.data.data);
-        
+          return response.data;
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            return error.response?.data;
+          }
+        }
+      };
+
+      if (data) {
+        getUser().then((response) => {
+          setUserDetails(response);
+          localStorage.setItem("userDetails", JSON.stringify(response));
+        });
+
+        setToken(data.data.token);
         localStorage.setItem("token", `Bearer ${data.data.token}`);
-        localStorage.setItem("user", user.data.data.userName);
-        localStorage.setItem("userDetails", userDetailsJSON);
 
         navigate("/todolist");
-      } else {
-        setEmailError("Please verify your email first.");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -59,7 +70,7 @@ export default function Login() {
   return (
     <section className="text-gray-600 body-font mt-20">
       <div className="container px-5 py-24 mx-auto flex">
-        <form className=" lg:w-1/3 md:w-1/2 bg-white rounded-lg p-8 flex flex-col mx-auto mt-10 md:mt-0 relative z-10 shadow-xl">
+        <form className="lg:w-1/3 md:w-1/2 bg-white rounded-lg p-8 flex flex-col mx-auto mt-10 md:mt-0 relative z-10 shadow-xl">
           <Link to="/">
             <svg
               fill="none"
@@ -86,6 +97,7 @@ export default function Login() {
               onChange={(e) => {
                 setEmail(e.target.value);
               }}
+              autoComplete="email"
             />
             {emailError && (
               <p className="text-red-500 text-xs mt-1">{emailError}</p>
@@ -98,11 +110,14 @@ export default function Login() {
               type="password"
               id="password"
               name="password"
-              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                passwordError ? "border-red-500" : ""
+              }`}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
+              autoComplete="current-password"
             />
             {passwordError && (
               <p className="text-red-500 text-xs mt-1">{passwordError}</p>
@@ -127,3 +142,4 @@ export default function Login() {
     </section>
   );
 }
+

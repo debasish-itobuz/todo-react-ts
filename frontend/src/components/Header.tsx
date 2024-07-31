@@ -1,9 +1,19 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GlobalContext } from "./UserContext";
 
 const Header = () => {
   const navigate = useNavigate();
-  const user = localStorage.getItem("user");
+  const { userDetails, token, setUserDetails, setToken } =
+    useContext(GlobalContext);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setUserDetails(null);
+    setToken(null);
+    navigate("/");
+  };
+  console.log("user", userDetails?.data?.userName);
 
   return (
     <header className="text-gray-600 body-font fixed top-0 w-full bg-white">
@@ -21,7 +31,7 @@ const Header = () => {
           <span className="ml-3 text-xl cursor-pointer">Todo-App</span>
         </p>
 
-        {!localStorage.getItem("token") ? (
+        {!token ? (
           <div>
             <Link
               to="/login"
@@ -44,15 +54,9 @@ const Header = () => {
                 navigate("/user-profile/");
               }}
             >
-              Hello, {user}
+              {`Hello, ${userDetails?.data?.userName}`}
             </h3>
-            <button
-              className="text-gray-900"
-              onClick={() => {
-                localStorage.clear();
-                navigate("/");
-              }}
-            >
+            <button className="text-gray-900" onClick={handleLogout}>
               Logout
             </button>
           </div>

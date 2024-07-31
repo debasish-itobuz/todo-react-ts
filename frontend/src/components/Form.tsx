@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
+
 export default function Form({
   setIsCreate,
   setErrors,
@@ -11,7 +12,7 @@ export default function Form({
 }) {
   const [todoText, setTodoText] = useState("");
 
-  const handleSubmit = async (event: any) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!todoText.trim()) {
@@ -22,6 +23,11 @@ export default function Form({
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        setErrors("Authorization token is missing.");
+        return;
+      }
+
       const response = await axios.post(
         "http://localhost:4001/todo/create",
         {
@@ -30,21 +36,23 @@ export default function Form({
         },
         {
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      setIsCreate(!!response.data); //sets bollean
+
+      setIsCreate(!!response.data);
       console.log("Response from server:", response.data);
 
       setTodoText("");
       setErrors("");
     } catch (error) {
       console.error("Error posting data:", error);
+      setErrors("Error posting data: " + error.message);
     }
   };
 
-  const handleChange = (event: any) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTodoText(event.target.value);
     setErrors("");
   };
@@ -54,7 +62,7 @@ export default function Form({
       className="form mt-36 mb-2 flex flex-col items-center gap-3"
       onSubmit={handleSubmit}
     >
-      <div className="">
+      <div>
         <label>
           <input
             type="text"

@@ -50,7 +50,6 @@ export default function SignUp() {
         email: email,
         password: password,
       });
-      console.log("response", response);
 
       setSuccessMessage(
         "SignUp Done. Please Check your mail to verify your email.."

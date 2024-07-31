@@ -1,8 +1,9 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { FaRegEdit } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import Form from "./Form";
+import { useToken } from "./UserContext";
 
 enum Status {
   todo = "ToDo",
@@ -26,16 +27,22 @@ const List: React.FC = () => {
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string>("");
   const [filter, setFilter] = useState<string>("all");
 
+  const { token } = useToken(); // Get the token from context
+
   useEffect(() => {
     fetchData();
-  }, [isCreate]);
+  }, [isCreate, token]); // Add token as a dependency
 
   async function fetchData() {
     try {
-      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authorization token is missing.");
+        return;
+      }
+
       const response = await axios.get("http://localhost:4001/todo/get", {
         headers: {
-          Authorization: token,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -50,6 +57,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching todos:", error);
+      setError("Error fetching todos: " + error.message);
     }
   }
 
@@ -64,7 +72,11 @@ const List: React.FC = () => {
 
   const handleUpdate = async (id: string, title: string, checked: boolean) => {
     try {
-      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authorization token is missing.");
+        return;
+      }
+
       const response = await axios.put(
         `http://localhost:4001/todo/update?id=${id}`,
         {
@@ -73,7 +85,7 @@ const List: React.FC = () => {
         },
         {
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -86,6 +98,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error updating todo:", error);
+      setError("Error updating todo: " + error.message);
     }
   };
 
@@ -101,12 +114,16 @@ const List: React.FC = () => {
 
   const handleConfirmDelete = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authorization token is missing.");
+        return;
+      }
+
       const response = await axios.delete(
         `http://localhost:4001/todo/delete?id=${id}`,
         {
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -117,6 +134,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error deleting todo:", error);
+      setError("Error deleting todo: " + error.message);
     }
   };
 
@@ -124,29 +142,18 @@ const List: React.FC = () => {
     setDeleteConfirmationId("");
   };
 
-  // const handleChange = async (id: string) => {
-  //   const updatedTodos = todos.map((todo) =>
-  //     todo._id === id ? { ...todo, checked: !todo.checked } : todo
-  //   );
-  //   setTodos(updatedTodos);
-
-  //   const updatedTodo = updatedTodos.find((todo) => todo._id === id);
-  //   if (updatedTodo) {
-  //     await handleUpdate(id, updatedTodo.title, updatedTodo.checked);
-  //   }
-  // };
-
   const handleChange = async (id: string) => {
     const updatedTodos = todos.map((todo) => {
       if (todo._id === id) {
         const updatedTodo = { ...todo, checked: !todo.checked };
-        handleUpdate(id, updatedTodo.title, updatedTodo.checked); // Update the todo item
+        handleUpdate(id, updatedTodo.title, updatedTodo.checked);
         return updatedTodo;
       }
       return todo;
     });
     setTodos(updatedTodos);
   };
+  
 
   const filteredTodos = todos.filter((todo) => {
     if (filter === "all") return true;
@@ -270,22 +277,23 @@ const List: React.FC = () => {
               <p className="mb-2">Are you sure you want to delete this task?</p>
               <div className="flex justify-center gap-4">
                 <button
-                  className="bg-red-500 text-white px-3 py-1 rounded"
+                  className="bg-red-500 text-white p-2 rounded"
                   onClick={() => handleConfirmDelete(deleteConfirmationId)}
                 >
-                  Confirm
+                  Yes
                 </button>
                 <button
-                  className="bg-gray-400 text-gray-800 px-3 py-1 rounded"
+                  className="bg-gray-500 text-white p-2 rounded"
                   onClick={handleCancelDelete}
                 >
-                  Cancel
+                  No
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
+      {error && <p className="text-red-500 text-center mt-2">{error}</p>}
     </div>
   );
 };

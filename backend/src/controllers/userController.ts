@@ -1,20 +1,19 @@
+import { Request, Response } from "express";
 import userModel from "../models/userModel";
-import todoModel from "../models/todoModel";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { config } from "dotenv";
 config();
-import jwt from "jsonwebtoken";
-import { Request, Response } from "express";
 import { User, userValidation } from "../validators/userValidators";
 import { catchBlock } from "../helper/commonCode";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ZodError } from "zod";
 import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
+import todoModel from "../models/todoModel";
 
 const generateVerificationToken = (): string => {
-  const token = crypto.randomBytes(20).toString("hex");
-  return token;
+  return crypto.randomBytes(20).toString("hex");
 };
 
 const postUser = async (req: Request, res: Response) => {
@@ -23,36 +22,60 @@ const postUser = async (req: Request, res: Response) => {
     userValidation.parse(user);
 
     const verificationToken = generateVerificationToken();
-    // console.log(verificationToken);
-
     const alreadyExistUser = await userModel.findOne({ email: user.email });
     if (alreadyExistUser)
       return res.status(400).send({ message: "User already exists" });
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(user.password, salt);
+
+    const profilePicture = req.file ? req.file.path : "";
+
     const data = await userModel.create({
       ...user,
       password: hashedPassword,
-      verificationToken: verificationToken,
+      verificationToken,
+      profilePicture,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const check: any = await sendVerificationEmail(
+    const isEmailSent = await sendVerificationEmail(
       data.email,
       data.verificationToken
     );
 
-    if (check) {
-      console.log("Verification link send successfully!");
+    if (isEmailSent) {
+      console.log("Verification link sent successfully!");
+    } else {
+      console.log("Failed to send verification link.");
     }
 
-    res.status(200).send({ data: data, message: "User added successfully " });
-    // console.log(data.verificationToken);
-
+    res.status(200).send({ data, message: "User added successfully" });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
+    console.error("Error in postUser:", e); // Log the error
     return catchBlock(e, res, "User not added");
+  }
+};
+
+const uploadProfilePicture = async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.id;
+    const profilePicture = req.file ? req.file.path : "";
+
+    if (!userId)
+      return res.status(400).send({ message: "User ID is required" });
+
+    const data = await userModel.findByIdAndUpdate(userId, { profilePicture });
+
+    if (!data) return res.status(400).send({ message: "User not found" });
+
+    return res
+      .status(200)
+      .send({ data, message: "Profile picture uploaded successfully" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any | ZodError) {
+    console.error("Error in uploadProfilePicture:", e);
+    return catchBlock(e, res, "Profile picture not uploaded");
   }
 };
 
@@ -164,4 +187,12 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-export { postUser, loginUser, updateUser, deleteUser, getUser, verifyEmail };
+export {
+  postUser,
+  loginUser,
+  updateUser,
+  deleteUser,
+  getUser,
+  verifyEmail,
+  uploadProfilePicture,
+};

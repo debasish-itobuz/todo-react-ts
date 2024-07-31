@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 export const sendVerificationEmail = async (
   toEmail: string,
   verificationToken: string | null
-) => {
+): Promise<boolean> => {
   // Construct the verification link using your frontend URL and the token
   const verificationLink = `http://localhost:5173/verify-email?token=${verificationToken}`;
 
@@ -28,14 +28,12 @@ export const sendVerificationEmail = async (
   };
 
   // Send the email
-  const mail = transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent: " + info.response);
-    }
-    return info;
-  });
-
-  return mail;
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Verification link sent successfully!");
+    return true;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return false;
+  }
 };
