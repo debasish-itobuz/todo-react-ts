@@ -6,8 +6,8 @@ import SignUp from "./pages/SignUp";
 import TodoList from "./pages/TodoList";
 import VerifyUser from "./pages/VerifyUser";
 import { adminRoutes } from "./routes";
-// import UserProfile from "./pages/UserProfile2";
-import UserProfile from "./pages/UserProfile1";
+import UserProfile from "./pages/UserProfile";
+// import UserProfile from "./pages/UserProfile1";
 
 function App() {
   return (

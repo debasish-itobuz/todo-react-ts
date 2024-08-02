@@ -59,19 +59,26 @@ const postUser = async (req: Request, res: Response) => {
 
 const uploadProfilePicture = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.id;
-    const profilePicture = req.file ? req.file.path : "";
+    if (req?.file?.path) {
+      const userId = req.query.id;
+      const profilePicture = req.file.path;
 
-    if (!userId)
-      return res.status(400).send({ message: "User ID is required" });
+      if (!userId)
+        return res.status(400).send({ message: "User ID is required" });
 
-    const data = await userModel.findByIdAndUpdate(userId, { profilePicture });
+      const data = await userModel.findByIdAndUpdate(userId, {
+        profilePicture,
+      });
 
-    if (!data) return res.status(400).send({ message: "User not found" });
+      if (!data) return res.status(400).send({ message: "User not found" });
 
-    return res
-      .status(200)
-      .send({ data, message: "Profile picture uploaded successfully" });
+      return res.status(200).send({
+        data: { ...data, profilePicture },
+        message: "Profile picture uploaded successfully",
+      });
+    } else {
+      return res.status(400).send({ message: "Profile path not recieved" });
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
     console.error("Error in uploadProfilePicture:", e);
@@ -136,7 +143,7 @@ const updateUser = async (req: Request, res: Response) => {
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
       .status(200)
-      .send({ data: data, message: "User updated successfully" });
+      .send({ data: { ...data }, message: "User updated successfully" });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
