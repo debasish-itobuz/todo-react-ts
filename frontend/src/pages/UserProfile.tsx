@@ -2,17 +2,23 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { GlobalContext } from "../components/UserContext";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const userProfileSchema = z.object({
+  id: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email("Invalid email address"),
+  password: z.string().optional(),
+  phone: z.string().optional(),
+  profilePicture: z.string().optional(),
+});
+
+type UserProfileFormData = z.infer<typeof userProfileSchema>;
 
 const UserProfile: React.FC = () => {
-  const [formData, setFormData] = useState({
-    id: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    phone: "",
-    profilePicture: "",
-  });
   const { userDetails, setUserDetails } = useContext(GlobalContext);
   const [formError, setFormError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -22,36 +28,34 @@ const UserProfile: React.FC = () => {
 
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
+  const {
+    register, handleSubmit, setValue,
+    formState: { errors },
+    watch,
+  } = useForm<UserProfileFormData>({
+    resolver: zodResolver(userProfileSchema),
+  });
+
   const loadUserData = () => {
     if (userDetails) {
       const userData = userDetails;
       const profilePicture = userData.data.profilePicture
-        ? `${backendUrl}/${userData.data.profilePicture}`
+        ? `${userData.data.profilePicture.startsWith(backendUrl) ? userData.data.profilePicture : `${backendUrl}/${userData.data.profilePicture}`}`
         : "";
 
-      setFormData({
-        id: userData.data.id || userData.data._id || "",
-        firstName: userData.data.firstName || "",
-        lastName: userData.data.lastName || "",
-        email: userData.data.email || "",
-        password: userData.data.password || "",
-        phone: userData.data.phone || "",
-        profilePicture,
-      });
+      setValue("id", userData.data.id || userData.data._id || "");
+      setValue("firstName", userData.data.firstName || "");
+      setValue("lastName", userData.data.lastName || "");
+      setValue("email", userData.data.email || "");
+      setValue("password", userData.data.password || "");
+      setValue("phone", String(userData.data.phone || ""));
+      setValue("profilePicture", profilePicture);
     }
   };
 
   useEffect(() => {
     loadUserData();
   }, [userDetails]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -64,7 +68,7 @@ const UserProfile: React.FC = () => {
         uploadFormData.append("profilePicture", file);
 
         const response = await axios.post(
-          `${backendUrl}/user/upload-profile?id=${formData.id}`,
+          `${backendUrl}/user/upload-profile?id=${userDetails?.data._id}`,
           uploadFormData,
           {
             headers: {
@@ -74,10 +78,8 @@ const UserProfile: React.FC = () => {
         );
 
         const updatedProfilePicture = response.data.data.profilePicture;
-        setFormData((prevData) => ({
-          ...prevData,
-          profilePicture: updatedProfilePicture,
-        }));
+        console.log("upp", updatedProfilePicture)
+        setValue("profilePicture", updatedProfilePicture);
 
         setUserDetails((prev) => {
           if (prev) {
@@ -116,18 +118,9 @@ const UserProfile: React.FC = () => {
     setIsEditMode(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const onSubmit: SubmitHandler<UserProfileFormData> = async (data) => {
     try {
-      await axios.put(`${backendUrl}/user/update?id=${formData.id}`, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        profilePicture: formData.profilePicture,
-      });
+      await axios.put(`${backendUrl}/user/update?id=${data.id}`, data);
 
       setUserDetails((prev) => {
         if (prev) {
@@ -135,10 +128,10 @@ const UserProfile: React.FC = () => {
             ...prev,
             data: {
               ...prev.data,
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              email: formData.email,
-              phone: formData.phone,
+              firstName: data.firstName || "",
+              lastName: data.lastName || "",
+              email: data.email,
+              phone: data.phone || "",
               profilePicture: prev.data.profilePicture,
             },
           };
@@ -161,6 +154,10 @@ const UserProfile: React.FC = () => {
       }, 2000);
     }
   };
+
+
+
+  const profilePicture = watch("profilePicture");
 
   return (
     <div className="max-w-md mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
@@ -186,7 +183,7 @@ const UserProfile: React.FC = () => {
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
         </div>
       )}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -195,12 +192,16 @@ const UserProfile: React.FC = () => {
             <input
               type="text"
               id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleInputChange}
+              {...register("firstName")}
               readOnly={!isEditMode}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full px-3 py-2 border ${errors.firstName ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
             />
+            {errors.firstName && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.firstName.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -209,12 +210,16 @@ const UserProfile: React.FC = () => {
             <input
               type="text"
               id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleInputChange}
+              {...register("lastName")}
               readOnly={!isEditMode}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full px-3 py-2 border ${errors.lastName ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
             />
+            {errors.lastName && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.lastName.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -223,11 +228,16 @@ const UserProfile: React.FC = () => {
             <input
               type="email"
               id="email"
-              name="email"
-              value={formData.email}
+              {...register("email")}
               readOnly
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full px-3 py-2 border ${errors.email ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -236,12 +246,16 @@ const UserProfile: React.FC = () => {
             <input
               type="tel"
               id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
+              {...register("phone")}
               readOnly={!isEditMode}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full px-3 py-2 border ${errors.phone ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
             />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.phone.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -254,21 +268,20 @@ const UserProfile: React.FC = () => {
                 onChange={handleFileChange}
                 className="sr-only"
                 id="profilePicture"
-                name="profilePicture"
                 disabled={!isEditMode}
               />
               <label
                 htmlFor="profilePicture"
-                className="cursor-pointer inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"
+                className="cursor-pointer inline-block h-20 w-20 rounded-full overflow-hidden bg-gray-100"
               >
-                {formData.profilePicture ? (
+                {profilePicture ? (
                   <img
-                    src={formData.profilePicture}
+                    src={profilePicture}
                     alt="Profile"
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-20 w-20 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"></span>
+                  <span className="inline-block h-20 w-20 rounded-full overflow-hidden bg-gray-100"></span>
                 )}
               </label>
             </div>

@@ -4,7 +4,6 @@ import App from "./App.tsx";
 import "./index.css";
 import { GlobalProvider } from "./components/UserContext.tsx";
 
-
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );

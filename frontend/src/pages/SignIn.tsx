@@ -1,46 +1,46 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { GlobalContext } from "../components/UserContext";
 
+const schema = z.object({
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
   const navigate = useNavigate();
-  const { userDetails, setUserDetails, setToken } = useContext(GlobalContext);
+  const { setUserDetails, setToken } = useContext(GlobalContext);
+  const [authError, setAuthError] = useState<string | null>(null);
 
-  const handleLogIn = async (e) => {
-    e.preventDefault();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    } else {
-      setEmailError("");
-    }
-
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const response = await axios.post("http://localhost:4001/user/login", {
-        email: email,
-        password: password,
-      });
-
-      const data = response.data;
-
-      if (data.data.email !== email) {
-        setEmailError("Invalid Credentials");
-        return;
-      }
+      const response = await axios.post(
+        "http://localhost:4001/user/login",
+        data
+      );
+      const loginData = response.data;
 
       const getUser = async () => {
         try {
           const response = await axios.get(
-            `http://localhost:4001/user/get-user?id=${data.data.id}`
+            `http://localhost:4001/user/get-user?id=${loginData.data.id}`
           );
-
           return response.data;
         } catch (error) {
           if (error instanceof AxiosError) {
@@ -49,28 +49,30 @@ export default function Login() {
         }
       };
 
-      if (data) {
-        getUser().then((response) => {
-          setUserDetails(response);
-          localStorage.setItem("userDetails", JSON.stringify(response));
+      if (loginData) {
+        getUser().then((userResponse) => {
+          setUserDetails(userResponse);
+          localStorage.setItem("userDetails", JSON.stringify(userResponse));
         });
 
-        setToken(data.data.token);
-        localStorage.setItem("token", `Bearer ${data.data.token}`);
+        setToken(loginData.data.token);
+        localStorage.setItem("token", `Bearer ${loginData.data.token}`);
 
         navigate("/todolist");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setEmailError("Invalid Credentials");
-      setPasswordError("Invalid Credentials");
+      setAuthError("Invalid credentials !!");
     }
   };
 
   return (
     <section className="text-gray-600 body-font mt-20">
       <div className="container px-5 py-24 mx-auto flex">
-        <form className="lg:w-1/3 md:w-1/2 bg-white rounded-lg p-8 flex flex-col mx-auto mt-10 md:mt-0 relative z-10 shadow-xl">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="lg:w-1/3 md:w-1/2 bg-white rounded-lg p-8 flex flex-col mx-auto mt-10 md:mt-0 relative z-10 shadow-xl"
+        >
           <Link to="/">
             <svg
               fill="none"
@@ -88,45 +90,43 @@ export default function Login() {
             <label className="leading-7 text-sm text-gray-600">Email</label>
             <input
               type="email"
-              id="email"
-              name="email"
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
-                emailError ? "border-red-500" : ""
-              }`}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
+              {...register("email")}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.email ? "border-red-500" : ""
+                }`}
               autoComplete="email"
             />
-            {emailError && (
-              <p className="text-red-500 text-xs mt-1">{emailError}</p>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
             )}
           </div>
+          {authError && (
+            <p className="text-red-500 text-xs mb-4">{authError}</p>
+          )}
 
           <div className="mb-4">
             <label className="leading-7 text-sm text-gray-600">Password</label>
             <input
               type="password"
-              id="password"
-              name="password"
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
-                passwordError ? "border-red-500" : ""
-              }`}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
+              {...register("password")}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.password ? "border-red-500" : ""
+                }`}
               autoComplete="current-password"
             />
-            {passwordError && (
-              <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
+          {authError && (
+            <p className="text-red-500 text-xs mb-4">{authError}</p>
+          )}
+
           <button
             className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
-            onClick={handleLogIn}
             type="submit"
           >
             Login
@@ -142,4 +142,3 @@ export default function Login() {
     </section>
   );
 }
-
