@@ -9,6 +9,7 @@ import React, {
 
 interface User {
   data: {
+    academics: [];
     id?: string;
     _id?: string; 
     firstName: string;

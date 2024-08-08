@@ -1,17 +1,11 @@
 import mongoose, { Document } from "mongoose";
 
-export interface Academic {
-  title: string;
-  year: number;
-}
-
 export interface User extends Document {
   userName: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: number;
-  academics: Academic[];
   password: string;
   profilePicture: string;
   verified: boolean;
@@ -19,17 +13,6 @@ export interface User extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
-const academicSchema = new mongoose.Schema<Academic>({
-  title: {
-    type: String,
-    required: true,
-  },
-  year: {
-    type: Number,
-    required: true,
-  },
-});
 
 const userSchema = new mongoose.Schema<User>(
   {
@@ -57,11 +40,6 @@ const userSchema = new mongoose.Schema<User>(
       type: Number,
       default: 0,
     },
-    academics: {
-      type: [academicSchema], // Array of academic objects
-      default: [], // Default is an empty array
-    },
-    
     password: {
       type: String,
       required: true,

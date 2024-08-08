@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { GlobalContext } from "../components/UserContext";
-import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -13,18 +13,8 @@ const userProfileSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().optional(),
   phone: z.string().optional(),
-  academics: z
-    .array(
-      z.object({
-        title: z.string().min(1, "Title is required").optional(),
-        year: z.number().min(1900, { message: "Year must be valid" }).optional(),
-      })
-    )
-    .optional(),
   profilePicture: z.string().optional(),
 });
-
-
 
 type UserProfileFormData = z.infer<typeof userProfileSchema>;
 
@@ -39,43 +29,29 @@ const UserProfile: React.FC = () => {
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
   const {
-    register,
-    handleSubmit,
-    setValue,
-    control,
+    register, handleSubmit, setValue,
     formState: { errors },
     watch,
-    trigger,
   } = useForm<UserProfileFormData>({
     resolver: zodResolver(userProfileSchema),
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "academics",
-  });
-
   const loadUserData = () => {
     if (userDetails) {
-      const userData = userDetails.data;
-
-      setValue("id", userData.id || userData._id || "");
-      setValue("firstName", userData.firstName || "");
-      setValue("lastName", userData.lastName || "");
-      setValue("email", userData.email || "");
-      setValue("password", userData.password || "");
-      setValue("phone", String(userData.phone || ""));
-
-      // Ensure academics is an array of objects
-      setValue("academics", Array.isArray(userData.academics) ? userData.academics : []);
-
-      const profilePicture = userData.profilePicture
-        ? `${userData.profilePicture.startsWith(backendUrl) ? userData.profilePicture : `${backendUrl}/${userData.profilePicture}`}`
+      const userData = userDetails;
+      const profilePicture = userData.data.profilePicture
+        ? `${userData.data.profilePicture.startsWith(backendUrl) ? userData.data.profilePicture : `${backendUrl}/${userData.data.profilePicture}`}`
         : "";
+
+      setValue("id", userData.data.id || userData.data._id || "");
+      setValue("firstName", userData.data.firstName || "");
+      setValue("lastName", userData.data.lastName || "");
+      setValue("email", userData.data.email || "");
+      setValue("password", userData.data.password || "");
+      setValue("phone", String(userData.data.phone || ""));
       setValue("profilePicture", profilePicture);
     }
   };
-
 
   useEffect(() => {
     loadUserData();
@@ -102,6 +78,7 @@ const UserProfile: React.FC = () => {
         );
 
         const updatedProfilePicture = response.data.data.profilePicture;
+        console.log("upp", updatedProfilePicture)
         setValue("profilePicture", updatedProfilePicture);
 
         setUserDetails((prev) => {
@@ -141,26 +118,11 @@ const UserProfile: React.FC = () => {
     setIsEditMode(true);
   };
 
-  const handleAddAcademic = async () => {
-    append({ title: "", year: undefined });
-    await trigger("academics"); // Trigger validation for academics
-  };
-
-  // Use handleAddAcademic in the onClick of the add button
-  <button
-    type="button"
-    onClick={handleAddAcademic}
-    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-  >
-    + Add Academic
-  </button>
-
-
   const onSubmit: SubmitHandler<UserProfileFormData> = async (data) => {
     try {
       await axios.put(`${backendUrl}/user/update?id=${data.id}`, data);
 
-      setUserDetails((prev: any) => {
+      setUserDetails((prev) => {
         if (prev) {
           return {
             ...prev,
@@ -170,7 +132,6 @@ const UserProfile: React.FC = () => {
               lastName: data.lastName || "",
               email: data.email,
               phone: data.phone || "",
-              academics: data.academics || [],
               profilePicture: prev.data.profilePicture,
             },
           };
@@ -194,10 +155,12 @@ const UserProfile: React.FC = () => {
     }
   };
 
+
+
   const profilePicture = watch("profilePicture");
 
   return (
-    <div className="max-w-md mx-auto my-10 bg-white p-4 rounded-md shadow-md relative">
+    <div className="max-w-md mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
       <Link to="/todolist">
         <svg
           fill="none"
@@ -221,7 +184,7 @@ const UserProfile: React.FC = () => {
         </div>
       )}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 gap-y-6 w-[26rem]">
+        <div className="grid grid-cols-1 gap-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">
               First Name
@@ -294,59 +257,6 @@ const UserProfile: React.FC = () => {
               </p>
             )}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Academics</label>
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 mb-2">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    {...register(`academics.${index}.title` as const)}
-                    placeholder="Title"
-                    className={`mt-1 block w-full px-3 py-2 border ${errors.academics?.[index]?.title ? "border-red-500" : "border-gray-300"
-                      } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                    readOnly={!isEditMode}
-                  />
-                  <p className="text-red-500 text-xs mt-1 h-1">
-                    {errors.academics?.[index]?.title?.message}
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    {...register(`academics.${index}.year` as const, { valueAsNumber: true })}
-                    placeholder="Year"
-                    className={`mt-1 block w-full px-3 py-2 border ${errors.academics?.[index]?.year ? "border-red-500" : "border-gray-300"
-                      } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                    readOnly={!isEditMode}
-                  />
-                  <p className="text-red-500 text-xs mt-1 h-1">
-                    {errors.academics?.[index]?.year?.message}
-                  </p>
-                </div>
-                {isEditMode && (
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="bg-red-500 text-white px-2 m-1 rounded-md"
-                  >
-                    -
-                  </button>
-                )}
-              </div>
-            ))}
-            {isEditMode && (
-              <button
-                type="button"
-                onClick={() => append({ title: "", year: undefined })}
-                className="bg-blue-500 text-white px-4 py-2 mt-2 rounded-md"
-              >
-                + Add Academic
-              </button>
-            )}
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Profile Picture(Click over the circle to upload image)
