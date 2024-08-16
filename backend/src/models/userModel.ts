@@ -5,6 +5,11 @@ export interface Academic {
   year: number;
 }
 
+export interface Video {
+  title: string;
+  url: string;
+}
+
 export interface User extends Document {
   userName: string;
   firstName: string;
@@ -12,6 +17,7 @@ export interface User extends Document {
   email: string;
   phone: number;
   academics: Academic[];
+  videos: Video[];
   password: string;
   profilePicture: string;
   verified: boolean;
@@ -29,6 +35,17 @@ const academicSchema = new mongoose.Schema<Academic>({
     type: Number,
     required: true,
   },
+});
+
+const videoSchema = new mongoose.Schema<Video>({
+  title: {
+    type: String,
+    required: true,
+  },
+  url: {
+    type: String,
+    required: true,
+  }
 });
 
 const userSchema = new mongoose.Schema<User>(
@@ -61,7 +78,10 @@ const userSchema = new mongoose.Schema<User>(
       type: [academicSchema], // Array of academic objects
       default: [], // Default is an empty array
     },
-    
+    videos: {
+      type: [videoSchema], // Array of video objects
+      default: [], // Default is an empty array
+    },
     password: {
       type: String,
       required: true,
@@ -81,3 +101,4 @@ const userSchema = new mongoose.Schema<User>(
 const userModel = mongoose.model<User>("User", userSchema);
 
 export default userModel;
+

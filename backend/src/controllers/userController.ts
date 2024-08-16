@@ -12,6 +12,7 @@ import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
 
+
 const generateVerificationToken = (): string => {
   return crypto.randomBytes(20).toString("hex");
 };
@@ -30,12 +31,14 @@ const postUser = async (req: Request, res: Response) => {
     const hashedPassword = bcrypt.hashSync(user.password, salt);
 
     const profilePicture = req.file ? req.file.path : "";
+    const videos = req.file ? req.file.path : [];
 
     const data = await userModel.create({
       ...user,
       password: hashedPassword,
       verificationToken,
       profilePicture,
+      videos
     });
 
     const isEmailSent = await sendVerificationEmail(
@@ -62,6 +65,7 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
     if (req?.file?.path) {
       const userId = req.query.id;
       const profilePicture = req.file.path;
+      // console.log("obj",req.file.path )
 
       if (!userId)
         return res.status(400).send({ message: "User ID is required" });
@@ -85,6 +89,38 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
     return catchBlock(e, res, "Profile picture not uploaded");
   }
 };
+
+const uploadVideo = async (req: Request, res: Response) => {
+  // console.log("...",req.file)
+  try {
+    if (req?.file?.path) {
+      const userId = req.query.id;
+      const videos = req.file;
+      // console.log("obj", videos)
+
+      if (!userId)
+        return res.status(400).send({ message: "User ID is required" });
+
+      const data = await userModel.findByIdAndUpdate(userId, {
+        videos: [{title: videos.filename, url: videos.path}]
+      });
+
+      if (!data) return res.status(400).send({ message: "User not found" });
+
+      return res.status(200).send({
+        data: { ...data, videos },
+        message: "video uploaded successfully",
+      });
+    } else {
+      return res.status(400).send({ message: "Video path not recieved" });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any | ZodError) {
+    console.error("Error in uploadVideo:", e);
+    return catchBlock(e, res, "Video not uploaded");
+  }
+};
+
 
 const loginUser = async (req: Request, res: Response) => {
   try {
@@ -202,4 +238,5 @@ export {
   getUser,
   verifyEmail,
   uploadProfilePicture,
+  uploadVideo
 };

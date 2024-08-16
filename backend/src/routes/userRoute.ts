@@ -7,6 +7,7 @@ import {
   updateUser,
   verifyEmail,
   uploadProfilePicture,
+  uploadVideo,
 } from "../controllers/userController";
 import upload from "../multerConfig"; // Import the upload middleware
 
@@ -22,6 +23,13 @@ router.post(
   "/upload-profile",
   upload.single("profilePicture"),
   uploadProfilePicture
+);
+
+router.post(
+  "/upload-video",
+  upload.single("videos"),
+  //  (req )=>{console.log("req=",req.body);},
+  uploadVideo
 );
 
 export default router;

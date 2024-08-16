@@ -8,8 +8,10 @@ import React, {
 } from "react";
 
 interface User {
+  // academics(academics: []): [];
   data: {
     academics: [];
+    videos:[];
     id?: string;
     _id?: string; 
     firstName: string;
