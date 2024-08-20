@@ -98,11 +98,17 @@ const uploadVideo = async (req: Request, res: Response) => {
       const videos = req.file;
       // console.log("obj", videos)
 
+      // const allvideos = await userModel.findById(userId, 'videos');
+
+      // console.log("allvideos", allvideos!.videos)
+
       if (!userId)
         return res.status(400).send({ message: "User ID is required" });
 
       const data = await userModel.findByIdAndUpdate(userId, {
-        videos: [{title: videos.filename, url: videos.path}]
+        // videos: [...allvideos!.videos, {title: videos.filename, url: videos.path}]
+         $push: { videos: {title: videos.filename, url: `http://localhost:4001/${videos.path}`}}
+
       });
 
       if (!data) return res.status(400).send({ message: "User not found" });

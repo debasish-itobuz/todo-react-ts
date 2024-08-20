@@ -13,14 +13,9 @@ const userProfileSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().optional(),
   phone: z.string().optional(),
-  academics: z
-    .array(
-      z.object({
+  academics: z.array( z.object({
         title: z.string().min(1, "Title is required").optional(),
-        year: z
-          .number()
-          .min(1980, { message: "Year must be valid" })
-          .optional(),
+        year: z.number() .min(1980, { message: "Year must be valid" }) .optional(),
       })
     )
     .optional(),
@@ -30,7 +25,7 @@ const userProfileSchema = z.object({
 
 type UserProfileFormData = z.infer<typeof userProfileSchema>;
 
-const UserProfile: React.FC = () => {
+  const UserProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useContext(GlobalContext);
   const [formError, setFormError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,6 +41,7 @@ const UserProfile: React.FC = () => {
     handleSubmit,
     setValue,
     control,
+    getValues,
     formState: { errors },
     watch,
   } = useForm<UserProfileFormData>({
@@ -60,7 +56,7 @@ const UserProfile: React.FC = () => {
   const loadUserData = () => {
     if (userDetails) {
       const userData = userDetails.data;
-      console.log("1", userData.videos)
+      // console.log("userData",userData)
 
       const profilePicture = userData.profilePicture
         ? `${
@@ -76,21 +72,19 @@ const UserProfile: React.FC = () => {
       setValue("email", userData.email || "");
       setValue("password", userData.password || "");
       setValue("phone", String(userData.phone || ""));
-      setValue(
-        "academics",
-        Array.isArray(userData.academics) ? userData.academics : []
-      );
+      setValue( "academics", Array.isArray(userData.academics) ? userData.academics : []);
       setValue("profilePicture", profilePicture);
-      setValue("videos", Array.isArray(userData.videos) ? userData.videos : []);
       setVideos(userData.videos || []);
+      console.log("userData.videos",userData.videos)
     }
   };
+  
 
   useEffect(() => {
     loadUserData();
   }, [userDetails]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setSelectedFile(file);
@@ -116,7 +110,7 @@ const UserProfile: React.FC = () => {
         setUserDetails((prev) => {
           if (prev) {
             return {
-              ...prev,
+              // ...prev,
               data: {
                 ...prev.data,
                 profilePicture: updatedProfilePicture,
@@ -146,56 +140,67 @@ const UserProfile: React.FC = () => {
     }
   };
 
+
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const uploadPromises = Array.from(e.target.files).map(async (file) => {
-
-        const formData = new FormData();
-        formData.append("videos", file)
-
+      const file = e.target.files[0];
+      setSelectedFile(file);
+  
+      try {
+        setIsUploading(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append("videos", file);
+  
         const response = await axios.post(
           `${backendUrl}/user/upload-video?id=${userDetails?.data._id}`,
-          formData,
+          uploadFormData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
             },
           }
         );
-        return response.data.data.videoUrl;
-      });
+  
+        console.log("response", response);
+        
+        const uploadedVideos = response.data.data._doc.videos;
+        console.log("uploadedVideos", uploadedVideos);
+  
+        const videoUrls = uploadedVideos.map((video: { url: string }) => video.url);
+        console.log("videoUrls", videoUrls);
+  
+        
+        setVideos((prevVideos) => {
+         
+          const updatedVideos = [...prevVideos, ...videoUrls];
 
-      try {
-        const newVideos = await Promise.all(uploadPromises);
-        setVideos((prevVideos) => [...prevVideos, ...newVideos]);
-        // console.log("newVideos", newVideos);
-
-        // Update the user details
-        setUserDetails((prev: any) => {
-          if (prev) {
-            return {
-              ...prev,
-              data: {
-                ...prev.data,
-                videos: [...(prev.data.videos || []), ...newVideos],
-              },
-            };
-          }
-          console.log("Prev", prev, newVideos);
-          return prev;
+          const uniqueVideos = Array.from(new Set(updatedVideos));
+  
+          return uniqueVideos;
         });
-
-        setValue("videos", [...(videos || []), ...newVideos]);
+  
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
       } catch (error) {
-        console.error("Error uploading videos:", error);
-        setFormError("Failed to upload videos. Please try again.");
+        console.error("Error uploading video:", error);
+        setFormError("Failed to upload video. Please try again.");
         setTimeout(() => {
           setFormError("");
         }, 2000);
+      } finally {
+        setIsUploading(false);
       }
+    } else {
+      setFormError("No file selected. Please choose a video to upload.");
+      setTimeout(() => {
+        setFormError("");
+      }, 2000);
     }
   };
-
+  
+  
   const handleUpdateClick = () => {
     setIsEditMode(true);
   };
@@ -207,7 +212,7 @@ const UserProfile: React.FC = () => {
       setUserDetails((prev: any) => {
         if (prev) {
           return {
-            ...prev,
+            // ...prev,
             data: {
               ...prev.data,
               firstName: data.firstName || "",
@@ -216,7 +221,7 @@ const UserProfile: React.FC = () => {
               phone: data.phone || "",
               academics: data.academics || [],
               profilePicture: prev.data.profilePicture,
-              // videos: data.videos || [],
+              videos: videos || [],
             },
           };
         }
@@ -246,7 +251,7 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-10 bg-white p-8 rounded-md shadow-md relative">
+    <div className="max-w-4xl mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
       <Link to="/todolist">
         <svg
           fill="none"
@@ -423,7 +428,7 @@ const UserProfile: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleFileChange}
+                  onChange={handleProfilePicture}
                   className="sr-only"
                   id="profilePicture"
                   disabled={!isEditMode}
@@ -457,13 +462,15 @@ const UserProfile: React.FC = () => {
                 className="mt-1 block w-full text-gray-700"
                 disabled={!isEditMode}
               />
-              {videos.length > 0 && (
-                <div className="mt-4">
-                  {videos.map((video, index) => (
-                    <div key={index} className="mb-4"></div>
-                  ))}
-                </div>
-              )}
+            <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
+                {videos.map((video, index) => (
+                  <li key={index}>
+                    <Link to={video} className="text-blue-500 hover:underline">
+                      {video}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
@@ -497,3 +504,4 @@ const UserProfile: React.FC = () => {
 };
 
 export default UserProfile;
+
