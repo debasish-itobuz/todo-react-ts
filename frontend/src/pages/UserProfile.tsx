@@ -11,11 +11,16 @@ const userProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   email: z.string().email("Invalid email address"),
-  password: z.string().optional(),
+  // password: z.string().optional(),
   phone: z.string().optional(),
-  academics: z.array( z.object({
+  academics: z
+    .array(
+      z.object({
         title: z.string().min(1, "Title is required").optional(),
-        year: z.number() .min(1980, { message: "Year must be valid" }) .optional(),
+        year: z
+          .number()
+          .min(1980, { message: "Year must be valid" })
+          .optional(),
       })
     )
     .optional(),
@@ -25,7 +30,7 @@ const userProfileSchema = z.object({
 
 type UserProfileFormData = z.infer<typeof userProfileSchema>;
 
-  const UserProfile: React.FC = () => {
+const UserProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useContext(GlobalContext);
   const [formError, setFormError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -56,7 +61,7 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
   const loadUserData = () => {
     if (userDetails) {
       const userData = userDetails.data;
-      // console.log("userData",userData)
+      console.log("userData", userData);
 
       const profilePicture = userData.profilePicture
         ? `${
@@ -70,21 +75,32 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
       setValue("firstName", userData.firstName || "");
       setValue("lastName", userData.lastName || "");
       setValue("email", userData.email || "");
-      setValue("password", userData.password || "");
+      // setValue("password", userData.password || "");
       setValue("phone", String(userData.phone || ""));
-      setValue( "academics", Array.isArray(userData.academics) ? userData.academics : []);
+      setValue(
+        "academics",
+        Array.isArray(userData.academics) ? userData.academics : []
+      );
       setValue("profilePicture", profilePicture);
-      setVideos(userData.videos || []);
-      console.log("userData.videos",userData.videos)
+      console.log("=>", userData.videos);
+      const allVideos: string[] = userData.videos || [];
+      // for(let video of userData.videos) {
+      //   allVideos.push(video.url);
+      // }
+      console.log("all", allVideos, userData);
+      setVideos(allVideos);
+      setValue("videos", userData.videos || []);
+      console.log("userData.videos", userData.videos);
     }
   };
-  
 
   useEffect(() => {
     loadUserData();
   }, [userDetails]);
 
-  const handleProfilePicture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicture = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setSelectedFile(file);
@@ -140,17 +156,16 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
     }
   };
 
-
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setSelectedFile(file);
-  
+
       try {
         setIsUploading(true);
         const uploadFormData = new FormData();
         uploadFormData.append("videos", file);
-  
+
         const response = await axios.post(
           `${backendUrl}/user/upload-video?id=${userDetails?.data._id}`,
           uploadFormData,
@@ -160,25 +175,15 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
             },
           }
         );
-  
-        console.log("response", response);
-        
-        const uploadedVideos = response.data.data._doc.videos;
-        console.log("uploadedVideos", uploadedVideos);
-  
-        const videoUrls = uploadedVideos.map((video: { url: string }) => video.url);
-        console.log("videoUrls", videoUrls);
-  
-        
-        setVideos((prevVideos) => {
-         
-          const updatedVideos = [...prevVideos, ...videoUrls];
+        let allVideos: string[] = [];
+        if (response.data.data.videos) {
+          for (let video of response.data.data.videos) {
+            allVideos.push(video.url);
+          }
+        }
 
-          const uniqueVideos = Array.from(new Set(updatedVideos));
-  
-          return uniqueVideos;
-        });
-  
+        setVideos(allVideos);
+
         setShowSuccessMessage(true);
         setTimeout(() => {
           setShowSuccessMessage(false);
@@ -199,13 +204,13 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
       }, 2000);
     }
   };
-  
-  
+
   const handleUpdateClick = () => {
     setIsEditMode(true);
   };
 
   const onSubmit: SubmitHandler<UserProfileFormData> = async (data) => {
+    console.log("data", data);
     try {
       await axios.put(`${backendUrl}/user/update?id=${data.id}`, data);
 
@@ -462,11 +467,14 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
                 className="mt-1 block w-full text-gray-700"
                 disabled={!isEditMode}
               />
-            <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
+              <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
                 {videos.map((video, index) => (
                   <li key={index}>
-                    <Link to={video} className="text-blue-500 hover:underline">
-                      {video}
+                    <Link
+                      to={`${backendUrl}/${video}`}
+                      className="text-blue-500 hover:underline"
+                    >
+                      {`${backendUrl}/${video}`}
                     </Link>
                   </li>
                 ))}
@@ -504,4 +512,3 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
 };
 
 export default UserProfile;
-

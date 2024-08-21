@@ -83,8 +83,7 @@ const userSchema = new mongoose.Schema<User>(
       default: [], // Default is an empty array
     },
     password: {
-      type: String,
-      required: true,
+      type: String
     },
     verified: {
       type: Boolean,

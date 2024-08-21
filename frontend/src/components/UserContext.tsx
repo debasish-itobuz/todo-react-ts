@@ -8,7 +8,6 @@ import React, {
 } from "react";
 
 interface User {
-  // academics(academics: []): [];
   data: {
     academics: [];
     videos:[];
@@ -56,14 +55,6 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
-
-  useEffect(() => {
-    if (userDetails) {
-      localStorage.setItem("userDetails", JSON.stringify(userDetails));
-    } else {
-      localStorage.removeItem("userDetails");
-    }
-  }, [userDetails]);
 
   useEffect(() => {
     if (token) {

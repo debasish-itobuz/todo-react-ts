@@ -51,8 +51,10 @@ export default function Login() {
 
       if (loginData) {
         getUser().then((userResponse) => {
-          setUserDetails(userResponse);
+          console.log(userResponse);
+          userResponse.data.videos = userResponse.data.videos.map((e: any) => e.url)
           localStorage.setItem("userDetails", JSON.stringify(userResponse));
+          setUserDetails(userResponse);
         });
 
         setToken(loginData.data.token);

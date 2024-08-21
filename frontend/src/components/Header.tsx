@@ -13,7 +13,7 @@ const Header = () => {
     setToken(null);
     navigate("/");
   };
-  console.log("user", userDetails?.data?.userName);
+  // console.log("user", userDetails?.data?.userName);
 
   return (
     <header className="text-gray-600 body-font fixed top-0 w-full bg-white">

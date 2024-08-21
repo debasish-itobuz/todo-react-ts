@@ -57,7 +57,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching todos:", error);
-      setError("Error fetching todos: " + error.message);
+      setError("Error fetching todos: " + error);
     }
   }
 
@@ -98,7 +98,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error updating todo:", error);
-      setError("Error updating todo: " + error.message);
+      setError("Error updating todo: " + error);
     }
   };
 
@@ -134,7 +134,7 @@ const List: React.FC = () => {
       }
     } catch (error) {
       console.error("Error deleting todo:", error);
-      setError("Error deleting todo: " + error.message);
+      setError("Error deleting todo: " + error);
     }
   };
 
@@ -153,7 +153,6 @@ const List: React.FC = () => {
     });
     setTodos(updatedTodos);
   };
-  
 
   const filteredTodos = todos.filter((todo) => {
     if (filter === "all") return true;

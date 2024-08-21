@@ -28,7 +28,6 @@ router.post(
 router.post(
   "/upload-video",
   upload.single("videos"),
-  //  (req )=>{console.log("req=",req.body);},
   uploadVideo
 );
 

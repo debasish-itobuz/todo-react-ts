@@ -11,7 +11,7 @@ import { ZodError } from "zod";
 import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
-
+import { Profile, profileValidation } from "../validators/profileValidators";
 
 const generateVerificationToken = (): string => {
   return crypto.randomBytes(20).toString("hex");
@@ -38,7 +38,7 @@ const postUser = async (req: Request, res: Response) => {
       password: hashedPassword,
       verificationToken,
       profilePicture,
-      videos
+      videos,
     });
 
     const isEmailSent = await sendVerificationEmail(
@@ -91,30 +91,39 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
 };
 
 const uploadVideo = async (req: Request, res: Response) => {
-  // console.log("...",req.file)
   try {
     if (req?.file?.path) {
       const userId = req.query.id;
       const videos = req.file;
-      // console.log("obj", videos)
-
-      // const allvideos = await userModel.findById(userId, 'videos');
-
-      // console.log("allvideos", allvideos!.videos)
 
       if (!userId)
         return res.status(400).send({ message: "User ID is required" });
 
-      const data = await userModel.findByIdAndUpdate(userId, {
-        // videos: [...allvideos!.videos, {title: videos.filename, url: videos.path}]
-         $push: { videos: {title: videos.filename, url: `http://localhost:4001/${videos.path}`}}
-
-      });
+      const data = await userModel.findByIdAndUpdate(
+        userId,
+        {
+          $push: { videos: { title: videos.filename, url: videos.path } },
+        },
+        { new: true }
+      );
 
       if (!data) return res.status(400).send({ message: "User not found" });
 
+      const response = {
+        id: data.id,
+        userName: data.userName,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        profilePicture: data.profilePicture,
+        phone: data.phone,
+        videos: data.videos,
+        academics: data.academics,
+        createdAt: data.createdAt,
+      };
+
       return res.status(200).send({
-        data: { ...data, videos },
+        data: response,
         message: "video uploaded successfully",
       });
     } else {
@@ -126,7 +135,6 @@ const uploadVideo = async (req: Request, res: Response) => {
     return catchBlock(e, res, "Video not uploaded");
   }
 };
-
 
 const loginUser = async (req: Request, res: Response) => {
   try {
@@ -159,7 +167,7 @@ const loginUser = async (req: Request, res: Response) => {
 
 const getUser = async (req: Request, res: Response) => {
   try {
-    const data = await userModel.findById(req.query.id);
+    const data = await userModel.findById(req.query.id, { password: 0 });
 
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
@@ -174,13 +182,25 @@ const getUser = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   try {
-    const user: User = req.body;
-    userValidation.parse(user);
-
-    // console.log("userupdated", user, req.query.id);
+    const user: Profile = req.body;
+    profileValidation.parse(user);
+    const { firstName, lastName, phone, academics, videos, profilePicture } =
+      user;
+    const allVideos = videos.map((e) => {
+      const videoobj = e.split("/");
+      return {
+        title: e,
+        url: videoobj[1],
+      };
+    });
 
     const data = await userModel.findByIdAndUpdate(req.query.id, {
-      ...user,
+      firstName,
+      lastName,
+      phone,
+      academics,
+      profilePicture,
+      allVideos,
     });
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
@@ -244,5 +264,5 @@ export {
   getUser,
   verifyEmail,
   uploadProfilePicture,
-  uploadVideo
+  uploadVideo,
 };
