@@ -135,6 +135,48 @@ const uploadVideo = async (req: Request, res: Response) => {
   }
 };
 
+const deleteVideo = async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    const videoId = req.query.videoId as string;
+
+    console.log("Received userId:", userId);
+    console.log("Received videoId:", videoId);
+
+    if (!userId || !videoId) {
+      return res
+        .status(400)
+        .send({ message: "User ID and Video ID are required" });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    const videoIndex = user.videos.findIndex(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (video) => (video as any)._id.toString() === videoId
+    );
+
+    if (videoIndex === -1) {
+      return res.status(404).send({ message: "Video not found" });
+    }
+
+    user.videos.splice(videoIndex, 1);
+    await user.save();
+
+    return res.status(200).send({
+      data: user,
+      message: "Video deleted successfully",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any | ZodError) {
+    console.error("Error in deleteVideo:", e);
+    return catchBlock(e, res, "Video not deleted");
+  }
+};
+
 const loginUser = async (req: Request, res: Response) => {
   try {
     const user: User = req.body;
@@ -264,4 +306,5 @@ export {
   verifyEmail,
   uploadProfilePicture,
   uploadVideo,
+  deleteVideo,
 };

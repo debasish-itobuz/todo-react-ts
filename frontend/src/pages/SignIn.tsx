@@ -41,6 +41,7 @@ export default function Login() {
           const response = await axios.get(
             `http://localhost:4001/user/get-user?id=${loginData.data.id}`
           );
+
           return response.data;
         } catch (error) {
           if (error instanceof AxiosError) {
@@ -52,7 +53,10 @@ export default function Login() {
       if (loginData) {
         getUser().then((userResponse) => {
           console.log(userResponse);
-          userResponse.data.videos = userResponse.data.videos.map((e: any) => e.url)
+          userResponse.data.videos = userResponse.data.videos.map(
+            (e: any) => e.url
+          );
+          console.log("userDatass", userResponse);
           localStorage.setItem("userDetails", JSON.stringify(userResponse));
           setUserDetails(userResponse);
         });
@@ -93,8 +97,9 @@ export default function Login() {
             <input
               type="email"
               {...register("email")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.email ? "border-red-500" : ""
-                }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                errors.email ? "border-red-500" : ""
+              }`}
               autoComplete="email"
             />
             {errors.email && (
@@ -112,8 +117,9 @@ export default function Login() {
             <input
               type="password"
               {...register("password")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.password ? "border-red-500" : ""
-                }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                errors.password ? "border-red-500" : ""
+              }`}
               autoComplete="current-password"
             />
             {errors.password && (

@@ -8,6 +8,7 @@ export interface Academic {
 export interface Video {
   title: string;
   url: string;
+  id: string;
 }
 
 export interface User extends Document {

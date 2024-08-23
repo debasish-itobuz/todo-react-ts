@@ -60,7 +60,7 @@ const UserProfile: React.FC = () => {
   const loadUserData = () => {
     if (userDetails) {
       const userData = userDetails.data;
-      console.log("userData", userData);
+      // console.log("userData", userData);
 
       const profilePicture = userData.profilePicture
         ? `${
@@ -80,13 +80,13 @@ const UserProfile: React.FC = () => {
         Array.isArray(userData.academics) ? userData.academics : []
       );
       setValue("profilePicture", profilePicture);
-      console.log("=>", userData.videos);
+      // console.log("=>", userData.videos);
       const allVideos: string[] = userData.videos || [];
-
-      console.log("all", allVideos, userData);
+      // console.log('videoid', userData)
+      // console.log("all", allVideos, userData);
       setVideos(allVideos);
       setValue("videos", allVideos);
-      console.log("userData.videos", userData.videos);
+      // console.log("userData.videos", userData.videos);
     }
   };
 
@@ -199,7 +199,6 @@ const UserProfile: React.FC = () => {
           }
           return prev;
         });
-
       } catch (error) {
         console.error("Error uploading video:", error);
         setFormError("Failed to upload video. Please try again.");
@@ -214,6 +213,46 @@ const UserProfile: React.FC = () => {
       setTimeout(() => {
         setFormError("");
       }, 2000);
+    }
+  };
+
+  const deleteVideo = async (videoUrl: string) => {
+    try {
+      const videoId = "66c86cafe45a879b364970e4";
+
+      if (!videoId) {
+        setFormError("Failed to identify video ID.");
+        setTimeout(() => setFormError(""), 2000);
+        return;
+      }
+
+      // Make the request to delete the video
+      await axios.delete(
+        `${backendUrl}/user/delete-video?userId=${userDetails?.data._id}&videoId=${videoId}`
+      );
+
+      // Update state to remove the deleted video
+      const updatedVideos = videos.filter((video) => video !== videoUrl);
+      setVideos(updatedVideos);
+
+      // Update user details with the new list of videos
+      setUserDetails(
+        (prev: any) =>
+          prev && {
+            data: {
+              ...prev.data,
+              videos: updatedVideos,
+            },
+          }
+      );
+
+      setFormError("");
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      setFormError("Failed to delete video. Please try again.");
+      setTimeout(() => setFormError(""), 2000);
     }
   };
 
@@ -487,6 +526,13 @@ const UserProfile: React.FC = () => {
                     >
                       {`${backendUrl}/${video}`}
                     </Link>
+                    <button
+                      className="ms-2 text-red-500"
+                      type="button"
+                      onClick={() => deleteVideo(video)}
+                    >
+                      X
+                    </button>
                   </li>
                 ))}
               </ul>
