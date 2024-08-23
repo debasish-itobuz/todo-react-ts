@@ -51,7 +51,7 @@ const getTodoById = async (req: Request, res: Response) => {
     console.log("Error", err);
     return res.status(400).send({
       data: null,
-      message: "Data not fetched", 
+      message: "Data not fetched",
     });
   }
 };

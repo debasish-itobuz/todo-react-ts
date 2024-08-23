@@ -45,7 +45,7 @@ const videoSchema = new mongoose.Schema<Video>({
   url: {
     type: String,
     required: true,
-  }
+  },
 });
 
 const userSchema = new mongoose.Schema<User>(
@@ -75,15 +75,15 @@ const userSchema = new mongoose.Schema<User>(
       default: 0,
     },
     academics: {
-      type: [academicSchema], // Array of academic objects
-      default: [], // Default is an empty array
+      type: [academicSchema],
+      default: [],
     },
     videos: {
-      type: [videoSchema], // Array of video objects
-      default: [], // Default is an empty array
+      type: [videoSchema],
+      default: [],
     },
     password: {
-      type: String
+      type: String,
     },
     verified: {
       type: Boolean,
@@ -100,4 +100,3 @@ const userSchema = new mongoose.Schema<User>(
 const userModel = mongoose.model<User>("User", userSchema);
 
 export default userModel;
-

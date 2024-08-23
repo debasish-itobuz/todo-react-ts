@@ -55,7 +55,7 @@ const postUser = async (req: Request, res: Response) => {
     res.status(200).send({ data, message: "User added successfully" });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {
-    console.error("Error in postUser:", e); // Log the error
+    console.error("Error in postUser:", e);
     return catchBlock(e, res, "User not added");
   }
 };
@@ -65,7 +65,6 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
     if (req?.file?.path) {
       const userId = req.query.id;
       const profilePicture = req.file.path;
-      // console.log("obj",req.file.path )
 
       if (!userId)
         return res.status(400).send({ message: "User ID is required" });
@@ -187,10 +186,10 @@ const updateUser = async (req: Request, res: Response) => {
     const { firstName, lastName, phone, academics, videos, profilePicture } =
       user;
     const allVideos = videos.map((e) => {
-      const videoobj = e.split("/");
+      const videoObj = e.split("/");
       return {
-        title: e,
-        url: videoobj[1],
+        title: videoObj[1],
+        url: e,
       };
     });
 

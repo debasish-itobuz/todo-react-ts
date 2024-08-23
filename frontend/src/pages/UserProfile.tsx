@@ -11,7 +11,6 @@ const userProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   email: z.string().email("Invalid email address"),
-  // password: z.string().optional(),
   phone: z.string().optional(),
   academics: z
     .array(
@@ -75,7 +74,6 @@ const UserProfile: React.FC = () => {
       setValue("firstName", userData.firstName || "");
       setValue("lastName", userData.lastName || "");
       setValue("email", userData.email || "");
-      // setValue("password", userData.password || "");
       setValue("phone", String(userData.phone || ""));
       setValue(
         "academics",
@@ -84,12 +82,10 @@ const UserProfile: React.FC = () => {
       setValue("profilePicture", profilePicture);
       console.log("=>", userData.videos);
       const allVideos: string[] = userData.videos || [];
-      // for(let video of userData.videos) {
-      //   allVideos.push(video.url);
-      // }
+
       console.log("all", allVideos, userData);
       setVideos(allVideos);
-      setValue("videos", userData.videos || []);
+      setValue("videos", allVideos);
       console.log("userData.videos", userData.videos);
     }
   };
@@ -126,7 +122,6 @@ const UserProfile: React.FC = () => {
         setUserDetails((prev) => {
           if (prev) {
             return {
-              // ...prev,
               data: {
                 ...prev.data,
                 profilePicture: updatedProfilePicture,
@@ -175,6 +170,7 @@ const UserProfile: React.FC = () => {
             },
           }
         );
+
         let allVideos: string[] = [];
         if (response.data.data.videos) {
           for (let video of response.data.data.videos) {
@@ -184,10 +180,26 @@ const UserProfile: React.FC = () => {
 
         setVideos(allVideos);
 
-        setShowSuccessMessage(true);
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
+        setValue("videos", allVideos);
+
+        setUserDetails((prev: any) => {
+          if (prev) {
+            const updatedUserDetails = {
+              data: {
+                ...prev.data,
+                videos: allVideos,
+              },
+            };
+
+            localStorage.setItem(
+              "userDetails",
+              JSON.stringify(updatedUserDetails)
+            );
+            return updatedUserDetails;
+          }
+          return prev;
+        });
+
       } catch (error) {
         console.error("Error uploading video:", error);
         setFormError("Failed to upload video. Please try again.");
@@ -217,7 +229,6 @@ const UserProfile: React.FC = () => {
       setUserDetails((prev: any) => {
         if (prev) {
           return {
-            // ...prev,
             data: {
               ...prev.data,
               firstName: data.firstName || "",

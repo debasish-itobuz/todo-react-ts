@@ -9,7 +9,7 @@ import {
   uploadProfilePicture,
   uploadVideo,
 } from "../controllers/userController";
-import upload from "../multerConfig"; // Import the upload middleware
+import upload from "../multerConfig";
 
 const router = Router();
 
@@ -25,10 +25,6 @@ router.post(
   uploadProfilePicture
 );
 
-router.post(
-  "/upload-video",
-  upload.single("videos"),
-  uploadVideo
-);
+router.post("/upload-video", upload.single("videos"), uploadVideo);
 
 export default router;
