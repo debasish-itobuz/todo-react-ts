@@ -48,7 +48,7 @@ export default function Form({
       setErrors("");
     } catch (error) {
       console.error("Error posting data:", error);
-      setErrors("Error posting data: " + error.message);
+      setErrors("Error posting data: " + error);
     }
   };
 

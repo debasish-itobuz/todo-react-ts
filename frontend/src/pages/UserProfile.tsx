@@ -6,7 +6,7 @@ import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const userProfileSchema = z.object({
+const userProfileSchema: any = z.object({
   id: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -24,7 +24,15 @@ const userProfileSchema = z.object({
     )
     .optional(),
   profilePicture: z.string().optional(),
-  videos: z.array(z.string()).optional(),
+
+  videos: z
+    .array(
+      z.object({
+        url: z.string().optional(),
+        _id: z.string().optional(),
+      })
+    )
+    .optional(),
 });
 
 type UserProfileFormData = z.infer<typeof userProfileSchema>;
@@ -36,7 +44,7 @@ const UserProfile: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [videos, setVideos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<any>([]);
 
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
@@ -81,7 +89,7 @@ const UserProfile: React.FC = () => {
       );
       setValue("profilePicture", profilePicture);
       // console.log("=>", userData.videos);
-      const allVideos: string[] = userData.videos || [];
+      const allVideos: { url: string; _id: string }[] = userData.videos || [];
       // console.log('videoid', userData)
       // console.log("all", allVideos, userData);
       setVideos(allVideos);
@@ -171,10 +179,10 @@ const UserProfile: React.FC = () => {
           }
         );
 
-        let allVideos: string[] = [];
+        let allVideos: { url: string; _id: string }[] = [];
         if (response.data.data.videos) {
           for (let video of response.data.data.videos) {
-            allVideos.push(video.url);
+            allVideos.push({ url: video.url, _id: video._id });
           }
         }
 
@@ -216,9 +224,9 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  const deleteVideo = async (videoUrl: string) => {
+  const deleteVideo = async (video_id: string) => {
     try {
-      const videoId = "66c86cafe45a879b364970e4";
+      const videoId = video_id;
 
       if (!videoId) {
         setFormError("Failed to identify video ID.");
@@ -226,25 +234,35 @@ const UserProfile: React.FC = () => {
         return;
       }
 
-      // Make the request to delete the video
       await axios.delete(
         `${backendUrl}/user/delete-video?userId=${userDetails?.data._id}&videoId=${videoId}`
       );
 
       // Update state to remove the deleted video
-      const updatedVideos = videos.filter((video) => video !== videoUrl);
+      const updatedVideos = videos.filter(
+        (video: any) => video._id !== videoId
+      );
       setVideos(updatedVideos);
+      setValue("videos", updatedVideos);
+      console.log("updatedVids", updatedVideos);
 
       // Update user details with the new list of videos
-      setUserDetails(
-        (prev: any) =>
-          prev && {
+      setUserDetails((prev: any) => {
+        if (prev) {
+          const updatedUserDetails = {
             data: {
               ...prev.data,
               videos: updatedVideos,
             },
-          }
-      );
+          };
+          localStorage.setItem(
+            "userDetails",
+            JSON.stringify(updatedUserDetails)
+          );
+          return updatedUserDetails;
+        }
+        return prev;
+      });
 
       setFormError("");
       setShowSuccessMessage(true);
@@ -346,11 +364,12 @@ const UserProfile: React.FC = () => {
                     errors.firstName ? "border-red-500" : "border-gray-300"
                   } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.firstName.message}
-                  </p>
-                )}
+                {errors.firstName &&
+                  typeof errors.firstName.message === "string" && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.firstName.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -365,11 +384,12 @@ const UserProfile: React.FC = () => {
                     errors.lastName ? "border-red-500" : "border-gray-300"
                   } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.lastName.message}
-                  </p>
-                )}
+                {errors.lastName &&
+                  typeof errors.lastName.message === "string" && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.lastName.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -384,7 +404,7 @@ const UserProfile: React.FC = () => {
                     errors.email ? "border-red-500" : "border-gray-300"
                   } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
-                {errors.email && (
+                {errors.email && typeof errors.email.message === "string" && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.email.message}
                   </p>
@@ -403,14 +423,14 @@ const UserProfile: React.FC = () => {
                     errors.phone ? "border-red-500" : "border-gray-300"
                   } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                 />
-                {errors.phone && (
+                {errors.phone && typeof errors.phone.message === "string" && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.phone.message}
                   </p>
                 )}
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Academics
                 </label>
@@ -448,6 +468,68 @@ const UserProfile: React.FC = () => {
                       />
                       <p className="text-red-500 text-xs mt-1 h-1">
                         {errors.academics?.[index]?.year?.message}
+                      </p>
+                    </div>
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="bg-red-500 text-white px-2 m-1 rounded-md"
+                      >
+                        -
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {isEditMode && (
+                  <button
+                    type="button"
+                    onClick={handleAddAcademic}
+                    className="bg-blue-500 text-white px-4 py-2 mt-2 rounded-md"
+                  >
+                    Add Academic
+                  </button>
+                )}
+              </div> */}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Academics
+                </label>
+                {fields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 mb-2">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        {...register(`academics.${index}.title` as const)}
+                        placeholder="Title"
+                        className={`mt-1 block w-full px-3 py-2 border ${
+                          (errors.academics as any)?.[index]?.title
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                        readOnly={!isEditMode}
+                      />
+                      <p className="text-red-500 text-xs mt-1 h-1">
+                        {(errors.academics as any)?.[index]?.title?.message}
+                      </p>
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        {...register(`academics.${index}.year` as const, {
+                          valueAsNumber: true,
+                        })}
+                        placeholder="Year"
+                        className={`mt-1 block w-full px-3 py-2 border ${
+                          (errors.academics as any)?.[index]?.year
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                        readOnly={!isEditMode}
+                      />
+                      <p className="text-red-500 text-xs mt-1 h-1">
+                        {(errors.academics as any)?.[index]?.year?.message}
                       </p>
                     </div>
                     {isEditMode && (
@@ -518,18 +600,18 @@ const UserProfile: React.FC = () => {
                 disabled={!isEditMode}
               />
               <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
-                {videos.map((video, index) => (
+                {videos.map((video: any, index: any) => (
                   <li key={index}>
                     <Link
-                      to={`${backendUrl}/${video}`}
+                      to={`${backendUrl}/${video.url}`}
                       className="text-blue-500 hover:underline"
                     >
-                      {`${backendUrl}/${video}`}
+                      {`${backendUrl}/${video.url}`}
                     </Link>
                     <button
-                      className="ms-2 text-red-500"
+                      className="ms-2 text-red-500 font-extrabold"
                       type="button"
-                      onClick={() => deleteVideo(video)}
+                      onClick={() => deleteVideo(video._id)}
                     >
                       X
                     </button>

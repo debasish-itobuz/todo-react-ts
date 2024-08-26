@@ -53,9 +53,9 @@ export default function Login() {
       if (loginData) {
         getUser().then((userResponse) => {
           console.log(userResponse);
-          userResponse.data.videos = userResponse.data.videos.map(
-            (e: any) => e.url
-          );
+          userResponse.data.videos = userResponse.data.videos.map((e: any) => {
+            return { url: e.url, _id: e._id };
+          });
           console.log("userDatass", userResponse);
           localStorage.setItem("userDetails", JSON.stringify(userResponse));
           setUserDetails(userResponse);

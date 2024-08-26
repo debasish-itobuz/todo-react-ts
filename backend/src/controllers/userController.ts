@@ -227,8 +227,9 @@ const updateUser = async (req: Request, res: Response) => {
     profileValidation.parse(user);
     const { firstName, lastName, phone, academics, videos, profilePicture } =
       user;
+    console.log("vids", videos);
     const allVideos = videos.map((e) => {
-      const videoObj = e.split("/");
+      const videoObj = e.url.split("/");
       return {
         title: videoObj[1],
         url: e,
