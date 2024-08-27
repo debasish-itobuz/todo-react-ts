@@ -11,7 +11,9 @@ import { ZodError } from "zod";
 import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
-import { Profile, profileValidation } from "../validators/profileValidators";
+import { profileValidation } from "../validators/profileValidators";
+import ffmpeg from "fluent-ffmpeg";
+import path from "path";
 
 const generateVerificationToken = (): string => {
   return crypto.randomBytes(20).toString("hex");
@@ -89,47 +91,73 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
   }
 };
 
+
 const uploadVideo = async (req: Request, res: Response) => {
   try {
-    if (req?.file?.path) {
-      const userId = req.query.id;
-      const videos = req.file;
+    const userId = req.query.id as string;
+    const video = req.file;
 
-      if (!userId)
-        return res.status(400).send({ message: "User ID is required" });
-
-      const data = await userModel.findByIdAndUpdate(
-        userId,
-        {
-          $push: { videos: { title: videos.filename, url: videos.path } },
-        },
-        { new: true }
-      );
-
-      if (!data) return res.status(400).send({ message: "User not found" });
-
-      const response = {
-        id: data.id,
-        userName: data.userName,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        profilePicture: data.profilePicture,
-        phone: data.phone,
-        videos: data.videos,
-        academics: data.academics,
-        createdAt: data.createdAt,
-      };
-
-      return res.status(200).send({
-        data: response,
-        message: "video uploaded successfully",
-      });
-    } else {
-      return res.status(400).send({ message: "Video path not recieved" });
+    if (!video) {
+      return res.status(400).send({ message: "Video not received" });
     }
+
+    if (!userId) {
+      return res.status(400).send({ message: "User ID is required" });
+    }
+
+    const thumbnailPath = path.join(
+      "thumbnails",
+      `${path.parse(video.filename).name}.png`
+    );
+
+    console.log("thumb:", thumbnailPath);
+
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(video.path)
+        .on("end", () => resolve())
+        .on("error", (err) => reject(err))
+        .screenshots({
+          timestamps: ["50%"], // Capture a frame at 50% of the video duration
+          filename: path.basename(thumbnailPath),
+          folder: path.dirname(thumbnailPath),
+        });
+    });
+
+    const data = await userModel.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          videos: {
+            title: video.filename,
+            url: video.path,
+            thumbnail: thumbnailPath, // Save the thumbnail URL
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!data) return res.status(400).send({ message: "User not found" });
+
+    const response = {
+      id: data.id,
+      userName: data.userName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      profilePicture: data.profilePicture,
+      phone: data.phone,
+      videos: data.videos,
+      academics: data.academics,
+      createdAt: data.createdAt,
+    };
+
+    return res.status(200).send({
+      data: response,
+      message: "Video uploaded successfully",
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+  } catch (e: any) {
     console.error("Error in uploadVideo:", e);
     return catchBlock(e, res, "Video not uploaded");
   }
@@ -140,8 +168,8 @@ const deleteVideo = async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     const videoId = req.query.videoId as string;
 
-    console.log("Received userId:", userId);
-    console.log("Received videoId:", videoId);
+    // console.log("Received userId:", userId);
+    // console.log("Received videoId:", videoId);
 
     if (!userId || !videoId) {
       return res
@@ -223,18 +251,8 @@ const getUser = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   try {
-    const user: Profile = req.body;
-    profileValidation.parse(user);
-    const { firstName, lastName, phone, academics, videos, profilePicture } =
-      user;
-    console.log("vids", videos);
-    const allVideos = videos.map((e) => {
-      const videoObj = e.url.split("/");
-      return {
-        title: videoObj[1],
-        url: e,
-      };
-    });
+    profileValidation.parse(req.body);
+    const { firstName, lastName, phone, academics, profilePicture } = req.body;
 
     const data = await userModel.findByIdAndUpdate(req.query.id, {
       firstName,
@@ -242,12 +260,13 @@ const updateUser = async (req: Request, res: Response) => {
       phone,
       academics,
       profilePicture,
-      allVideos,
     });
+
+    const updatedData = await userModel.findById(req.query.id);
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
       .status(200)
-      .send({ data: { ...data }, message: "User updated successfully" });
+      .send({ data: { ...updatedData }, message: "User updated successfully" });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any | ZodError) {

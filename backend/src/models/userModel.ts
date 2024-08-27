@@ -8,6 +8,7 @@ export interface Academic {
 export interface Video {
   title: string;
   url: string;
+  thumbnail: string;
   id: string;
 }
 
@@ -44,6 +45,10 @@ const videoSchema = new mongoose.Schema<Video>({
     required: true,
   },
   url: {
+    type: String,
+    required: true,
+  },
+  thumbnail: {
     type: String,
     required: true,
   },

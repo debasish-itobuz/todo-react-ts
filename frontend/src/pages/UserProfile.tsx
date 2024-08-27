@@ -88,13 +88,9 @@ const UserProfile: React.FC = () => {
         Array.isArray(userData.academics) ? userData.academics : []
       );
       setValue("profilePicture", profilePicture);
-      // console.log("=>", userData.videos);
       const allVideos: { url: string; _id: string }[] = userData.videos || [];
-      // console.log('videoid', userData)
-      // console.log("all", allVideos, userData);
       setVideos(allVideos);
       setValue("videos", allVideos);
-      // console.log("userData.videos", userData.videos);
     }
   };
 
