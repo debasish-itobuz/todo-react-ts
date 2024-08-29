@@ -18,16 +18,22 @@ app.use(cors());
 // Serve static files from the "uploads" directory
 app.use("/uploads", express.static("uploads"));
 
+// Serve static files from the "thumbnail" directory
+app.use("/thumbnail", express.static("thumbnail"));
+
 app.use("/user", userRoutes);
 app.use("/todo", todoRoutes);
 
 // Error handler middleware
-const errorHandler: ErrorRequestHandler = (err, req, res) => {
-  res.status(err.status || 500);
-  res.send({
-    status: err.status || 500,
-    message: err.message,
-  });
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  console.log({ err });
+  if (err) {
+    res.status(err.status || 500);
+    res.send({
+      status: err.status || 500,
+      message: err.message,
+    });
+  } else next(res);
 };
 
 app.use(errorHandler);

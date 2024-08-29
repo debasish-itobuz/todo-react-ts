@@ -28,8 +28,10 @@ const userProfileSchema: any = z.object({
   videos: z
     .array(
       z.object({
+        title: z.string().optional(),
         url: z.string().optional(),
         _id: z.string().optional(),
+        thumbnail: z.string().optional(),
       })
     )
     .optional(),
@@ -68,7 +70,6 @@ const UserProfile: React.FC = () => {
   const loadUserData = () => {
     if (userDetails) {
       const userData = userDetails.data;
-      // console.log("userData", userData);
 
       const profilePicture = userData.profilePicture
         ? `${
@@ -88,7 +89,12 @@ const UserProfile: React.FC = () => {
         Array.isArray(userData.academics) ? userData.academics : []
       );
       setValue("profilePicture", profilePicture);
-      const allVideos: { url: string; _id: string }[] = userData.videos || [];
+      const allVideos: {
+        title: string;
+        url: string;
+        _id: string;
+        thumbnail: string;
+      }[] = userData.videos || [];
       setVideos(allVideos);
       setValue("videos", allVideos);
     }
@@ -175,16 +181,27 @@ const UserProfile: React.FC = () => {
           }
         );
 
-        let allVideos: { url: string; _id: string }[] = [];
+        let allVideos: {
+          title: string;
+          url: string;
+          _id: string;
+          thumbnail: string;
+        }[] = [];
         if (response.data.data.videos) {
           for (let video of response.data.data.videos) {
-            allVideos.push({ url: video.url, _id: video._id });
+            allVideos.push({
+              title: video.title,
+              url: video.url,
+              _id: video._id,
+              thumbnail: video.thumbnail,
+            });
           }
         }
 
         setVideos(allVideos);
 
         setValue("videos", allVideos);
+        console.log("allvid", allVideos);
 
         setUserDetails((prev: any) => {
           if (prev) {
@@ -331,13 +348,21 @@ const UserProfile: React.FC = () => {
           <path d="M5 12h14M12 5l7 7-7 7"></path>
         </svg>
       </Link>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-        Profile Form
-      </h2>
-      {formError && <p className="text-red-500 mb-4">{formError}</p>}
-      {showSuccessMessage && (
-        <p className="text-green-500 mb-4">Data updated successfully.</p>
-      )}
+      <h2 className="text-2xl font-semibold text-gray-800">Profile Form</h2>
+      <div className="mb-4">
+        <p className={`text-red-500 ${formError ? "visible" : "invisible"}`}>
+          {formError || "Placeholder for error message"}
+        </p>
+        <p
+          className={`text-green-500 ${
+            showSuccessMessage ? "visible" : "invisible"
+          }`}
+        >
+          {showSuccessMessage
+            ? "Data updated successfully"
+            : "Placeholder for success message"}
+        </p>
+      </div>
       {isUploading && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
@@ -425,68 +450,6 @@ const UserProfile: React.FC = () => {
                   </p>
                 )}
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Academics
-                </label>
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2 mb-2">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        {...register(`academics.${index}.title` as const)}
-                        placeholder="Title"
-                        className={`mt-1 block w-full px-3 py-2 border ${
-                          errors.academics?.[index]?.title
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                        readOnly={!isEditMode}
-                      />
-                      <p className="text-red-500 text-xs mt-1 h-1">
-                        {errors.academics?.[index]?.title?.message}
-                      </p>
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        {...register(`academics.${index}.year` as const, {
-                          valueAsNumber: true,
-                        })}
-                        placeholder="Year"
-                        className={`mt-1 block w-full px-3 py-2 border ${
-                          errors.academics?.[index]?.year
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                        readOnly={!isEditMode}
-                      />
-                      <p className="text-red-500 text-xs mt-1 h-1">
-                        {errors.academics?.[index]?.year?.message}
-                      </p>
-                    </div>
-                    {isEditMode && (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="bg-red-500 text-white px-2 m-1 rounded-md"
-                      >
-                        -
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {isEditMode && (
-                  <button
-                    type="button"
-                    onClick={handleAddAcademic}
-                    className="bg-blue-500 text-white px-4 py-2 mt-2 rounded-md"
-                  >
-                    Add Academic
-                  </button>
-                )}
-              </div> */}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -595,22 +558,36 @@ const UserProfile: React.FC = () => {
                 className="mt-1 block w-full text-gray-700"
                 disabled={!isEditMode}
               />
-              <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
+              <ul className="mt-2 list-disc list-inside text-sm text-gray-600 ">
                 {videos.map((video: any, index: any) => (
-                  <li key={index}>
+                  <li
+                    key={index}
+                    className="flex justify-start items-center gap-3 mb-8"
+                  >
                     <Link
                       to={`${backendUrl}/${video.url}`}
-                      className="text-blue-500 hover:underline"
+                      className="text-blue-500 h-16 w-16 flex gap-6"
                     >
-                      {`${backendUrl}/${video.url}`}
+                      <img
+                        src={`${backendUrl}/${video.thumbnail}`}
+                        alt="Video Thumbnail"
+                        className="w-16 h-16 object-cover"
+                      />
                     </Link>
-                    <button
-                      className="ms-2 text-red-500 font-extrabold"
-                      type="button"
-                      onClick={() => deleteVideo(video._id)}
-                    >
-                      X
-                    </button>
+                    <div className="flex">
+                      <Link to={`${backendUrl}/${video.url}`}>
+                        <span className="font-medium text-gray-700">
+                          {video.title}
+                        </span>
+                      </Link>
+                      <button
+                        className="ms-2 text-red-500 font-extrabold"
+                        type="button"
+                        onClick={() => deleteVideo(video._id)}
+                      >
+                        X
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

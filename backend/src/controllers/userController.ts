@@ -91,7 +91,6 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
   }
 };
 
-
 const uploadVideo = async (req: Request, res: Response) => {
   try {
     const userId = req.query.id as string;
@@ -106,11 +105,9 @@ const uploadVideo = async (req: Request, res: Response) => {
     }
 
     const thumbnailPath = path.join(
-      "thumbnails",
+      "thumbnail",
       `${path.parse(video.filename).name}.png`
     );
-
-    console.log("thumb:", thumbnailPath);
 
     await new Promise<void>((resolve, reject) => {
       ffmpeg(video.path)
@@ -130,7 +127,7 @@ const uploadVideo = async (req: Request, res: Response) => {
           videos: {
             title: video.filename,
             url: video.path,
-            thumbnail: thumbnailPath, // Save the thumbnail URL
+            thumbnail: thumbnailPath,
           },
         },
       },
@@ -167,9 +164,6 @@ const deleteVideo = async (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
     const videoId = req.query.videoId as string;
-
-    // console.log("Received userId:", userId);
-    // console.log("Received videoId:", videoId);
 
     if (!userId || !videoId) {
       return res
