@@ -5,6 +5,9 @@ import { GlobalContext } from "../components/UserContext";
 import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Modal from "react-modal";
+
+// Modal.setAppElement("#root");
 
 const userProfileSchema: any = z.object({
   id: z.string().optional(),
@@ -42,11 +45,13 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
 const UserProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useContext(GlobalContext);
   const [formError, setFormError] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [videos, setVideos] = useState<any>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
@@ -109,7 +114,7 @@ const UserProfile: React.FC = () => {
   ) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setSelectedFile(file);
+      // setSelectedFile(file);
 
       try {
         setIsUploading(true);
@@ -164,7 +169,7 @@ const UserProfile: React.FC = () => {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setSelectedFile(file);
+      // setSelectedFile(file);
 
       try {
         setIsUploading(true);
@@ -336,13 +341,23 @@ const UserProfile: React.FC = () => {
     append({ title: "", year: undefined });
   };
 
+  const openVideoModal = (url: string) => {
+    setSelectedVideo(url);
+    setIsModalOpen(true);
+  };
+
+  const closeVideoModal = () => {
+    setSelectedVideo(null);
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto my-10 bg-white p-6 rounded-md shadow-md relative">
       <Link to="/todolist">
         <svg
           fill="none"
           stroke="currentColor"
-          className="w-6 h-6 ml-1 rotate-180 absolute end-5"
+          className="w-12 h-9 ml-1 rotate-180 absolute end-5"
           viewBox="0 0 24 24"
         >
           <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -378,7 +393,7 @@ const UserProfile: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  id="firstName"
+                  id="firstName" 
                   {...register("firstName")}
                   readOnly={!isEditMode}
                   className={`mt-1 block w-full px-3 py-2 border ${
@@ -558,14 +573,17 @@ const UserProfile: React.FC = () => {
                 className="mt-1 block w-full text-gray-700"
                 disabled={!isEditMode}
               />
+
               <ul className="mt-2 list-disc list-inside text-sm text-gray-600 ">
                 {videos.map((video: any, index: any) => (
                   <li
                     key={index}
                     className="flex justify-start items-center gap-3 mb-8"
                   >
-                    <Link
-                      to={`${backendUrl}/${video.url}`}
+                    <button
+                      onClick={() =>
+                        openVideoModal(`${backendUrl}/${video.url}`)
+                      }
                       className="text-blue-500 h-16 w-16 flex gap-6"
                     >
                       <img
@@ -573,13 +591,11 @@ const UserProfile: React.FC = () => {
                         alt="Video Thumbnail"
                         className="w-16 h-16 object-cover"
                       />
-                    </Link>
+                    </button>
                     <div className="flex">
-                      <Link to={`${backendUrl}/${video.url}`}>
-                        <span className="font-medium text-gray-700">
-                          {video.title}
-                        </span>
-                      </Link>
+                      <span className="font-medium text-gray-700">
+                        {video.title}
+                      </span>
                       <button
                         className="ms-2 text-red-500 font-extrabold"
                         type="button"
@@ -591,6 +607,37 @@ const UserProfile: React.FC = () => {
                   </li>
                 ))}
               </ul>
+
+              <Modal
+                isOpen={isModalOpen}
+                onRequestClose={closeVideoModal}
+                contentLabel="Video Modal"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-40"
+              >
+                {selectedVideo && (
+                  <div className="relative bg-white rounded-lg shadow-lg max-w-xl w-full h-auto max-h-[90vh] overflow-hidden">
+                    <div className="flex justify-end p-2">
+                      <button
+                        type="button"
+                        className="text-gray-400 hover:text-gray-500"
+                        aria-label="Close"
+                        onClick={closeVideoModal}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <div className="p-4 flex items-center justify-center h-full">
+                      <video
+                        controls
+                        className="w-auto max-w-full max-h-full object-contain"
+                      >
+                        <source src={selectedVideo} type="video/mp4" />
+                      </video>
+                    </div>
+                  </div>
+                )}
+              </Modal>
             </div>
           </div>
         </div>
