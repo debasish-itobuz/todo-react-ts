@@ -13,6 +13,7 @@ import crypto from "crypto";
 import todoModel from "../models/todoModel";
 import { profileValidation } from "../validators/profileValidators";
 import ffmpeg from "fluent-ffmpeg";
+import fs from "fs/promises";
 import path from "path";
 
 const generateVerificationToken = (): string => {
@@ -183,6 +184,19 @@ const deleteVideo = async (req: Request, res: Response) => {
 
     if (videoIndex === -1) {
       return res.status(404).send({ message: "Video not found" });
+    }
+
+    const video = user.videos[videoIndex];
+
+    // Remove video file
+    try {
+      await fs.unlink(video.url);
+      if (video.thumbnail) {
+        await fs.unlink(video.thumbnail);
+      }
+    } catch (err) {
+      console.error("Error deleting video file:", err);
+      return res.status(500).send({ message: "Failed to delete video file" });
     }
 
     user.videos.splice(videoIndex, 1);
