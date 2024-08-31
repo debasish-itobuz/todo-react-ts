@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { GlobalContext } from "../components/UserContext";
@@ -52,7 +52,8 @@ const UserProfile: React.FC = () => {
   const [videos, setVideos] = useState<any>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
+  
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
   const {
@@ -224,7 +225,12 @@ const UserProfile: React.FC = () => {
             return updatedUserDetails;
           }
           return prev;
-        });
+        })
+        
+        if (videoInputRef.current) {
+          videoInputRef.current.value = "";
+        }
+        ;
       } catch (error) {
         console.error("Error uploading video:", error);
         setFormError("Failed to upload video. Please try again.");
@@ -571,6 +577,7 @@ const UserProfile: React.FC = () => {
                 multiple
                 onChange={handleVideoUpload}
                 className="mt-1 block w-full text-gray-700"
+                ref={videoInputRef}
                 disabled={!isEditMode}
               />
 

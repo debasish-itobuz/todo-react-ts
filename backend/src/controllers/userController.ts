@@ -92,6 +92,7 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
   }
 };
 
+
 const uploadVideo = async (req: Request, res: Response) => {
   try {
     const userId = req.query.id as string;
@@ -237,6 +238,10 @@ const loginUser = async (req: Request, res: Response) => {
     userValidation.parse(user);
     const data = await userModel.findOne({ email });
     if (!data) return res.status(400).send({ message: "User doesnot exists" });
+
+    if (!data?.verified) {
+      return res.status(403).send({ message: "User not verified!" });
+    }
 
     const isCorrectPassword = bcrypt.compareSync(password, data.password);
     if (data && isCorrectPassword) {

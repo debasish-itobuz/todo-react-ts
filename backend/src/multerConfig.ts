@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
     const ext = path.extname(file.originalname);
     const originalName = path.basename(file.originalname, ext); // Get the original file name without extension
 
-    cb(null, `${originalName}${ext}`); // Use original file name with extension
+    cb(null, `${originalName}` + "-" + Date.now() + `${ext}`); // Use original file name with extension
   },
 });
 

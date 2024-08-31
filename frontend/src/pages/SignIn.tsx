@@ -27,6 +27,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { setUserDetails, setToken } = useContext(GlobalContext);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [verifyMessage, setVerifyMessage] = useState("");
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
@@ -71,9 +72,19 @@ export default function Login() {
 
         navigate("/todolist");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      setAuthError("Invalid credentials !!");
+
+      if (error.response.data.message) {
+        setVerifyMessage(error.response.data.message);
+      } else {
+        setAuthError("Invalid credentials !!");
+        setVerifyMessage("");
+      }
+
+      setTimeout(() => {
+        setVerifyMessage("");
+      }, 3000);
     }
   };
 
@@ -102,9 +113,8 @@ export default function Login() {
             <input
               type="email"
               {...register("email")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
-                errors.email ? "border-red-500" : ""
-              }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.email ? "border-red-500" : ""
+                }`}
               autoComplete="email"
             />
             {errors.email && (
@@ -122,9 +132,8 @@ export default function Login() {
             <input
               type="password"
               {...register("password")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
-                errors.password ? "border-red-500" : ""
-              }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.password ? "border-red-500" : ""
+                }`}
               autoComplete="current-password"
             />
             {errors.password && (
@@ -150,6 +159,9 @@ export default function Login() {
               Sign Up
             </Link>
           </div>
+          {verifyMessage && (
+            <p className="text-red-500 text-s mt-4 pt-2">{verifyMessage}</p>
+          )}
         </form>
       </div>
     </section>
