@@ -105,6 +105,23 @@ const uploadVideo = async (req: Request, res: Response) => {
       return res.status(400).send({ message: "User ID is required" });
     }
 
+    // Check if the video already exists for the user
+    const existingUser = await userModel.findById(userId);
+    if (!existingUser) {
+      return res.status(400).send({ message: "User not found" });
+    }
+
+    const isVideoExists = existingUser.videos.some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (v: any) => v.title === video.filename
+    );
+
+    if (isVideoExists) {
+      return res
+        .status(400)
+        .send({ message: "Video already exists, not uploaded again" });
+    }
+
     const thumbnailPath = path.join(
       "thumbnail",
       `${path.parse(video.filename).name}.png`
