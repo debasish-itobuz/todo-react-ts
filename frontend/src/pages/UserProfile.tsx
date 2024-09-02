@@ -53,7 +53,7 @@ const UserProfile: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
 
   const {
@@ -225,12 +225,11 @@ const UserProfile: React.FC = () => {
             return updatedUserDetails;
           }
           return prev;
-        })
-        
+        });
+
         if (videoInputRef.current) {
           videoInputRef.current.value = "";
         }
-        ;
       } catch (error) {
         console.error("Error uploading video:", error);
         setFormError("Failed to upload video. Please try again.");
@@ -399,7 +398,7 @@ const UserProfile: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  id="firstName" 
+                  id="firstName"
                   {...register("firstName")}
                   readOnly={!isEditMode}
                   className={`mt-1 block w-full px-3 py-2 border ${
