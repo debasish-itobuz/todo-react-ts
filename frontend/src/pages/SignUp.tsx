@@ -74,8 +74,12 @@ export default function SignUp() {
       }, 3000);
     } catch (error) {
       console.log("Error", error);
-      setServerError("User already exists");
+      setServerError("User exists or weak Password");
       setSuccessMessage("");
+
+      setTimeout(() => {
+        setServerError("");
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
@@ -130,9 +134,6 @@ export default function SignUp() {
               <p className="text-red-500 text-xs mt-1">
                 {errors.email.message}
               </p>
-            )}
-            {serverError && (
-              <p className="text-red-500 text-xs mt-1">{serverError}</p>
             )}
           </div>
 
@@ -235,8 +236,10 @@ export default function SignUp() {
               Log In
             </Link>
           </div>
-          {successMessage && (
+          {successMessage ? (
             <p className="text-green-500 text-s mt-4 pt-2">{successMessage}</p>
+          ) : (
+            <p className="text-red-500 text-s mt-4 pt-2">{serverError}</p>
           )}
         </form>
       </div>

@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { config } from "dotenv";
 config();
 import { User, userValidation } from "../validators/userValidators";
-import { catchBlock } from "../helper/commonCode";
+import { catchBlock, evaluateStrongPassword } from "../helper/commonCode";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ZodError } from "zod";
 import { sendVerificationEmail } from "../EmailVerify/mailVerify";
@@ -24,6 +24,14 @@ const postUser = async (req: Request, res: Response) => {
   try {
     const user: User = req.body;
     userValidation.parse(user);
+
+    // Evaluate password strength
+    const passwordStrength = evaluateStrongPassword(user.password);
+    if (passwordStrength === "Weak" || passwordStrength === "Medium") {
+      return res.status(400).send({
+        message: "Passwork too weak. Please choose a strong Password",
+      });
+    }
 
     const verificationToken = generateVerificationToken();
     const alreadyExistUser = await userModel.findOne({ email: user.email });
@@ -91,7 +99,6 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
     return catchBlock(e, res, "Profile picture not uploaded");
   }
 };
-
 
 const uploadVideo = async (req: Request, res: Response) => {
   try {

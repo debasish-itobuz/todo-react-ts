@@ -9,4 +9,15 @@ function catchBlock(e: any, res: Response, message: string) {
   return res.status(400).send({ message: e.message });
 }
 
-export { catchBlock };
+const evaluateStrongPassword = (password: string): string => {
+  let strength = "Weak";
+  const regexes = [/[a-z]/, /[A-Z]/, /\d/, /[!@#$%^&*(),.?":{}|<>]/];
+  const passedTests = regexes.filter((regex) => regex.test(password)).length;
+
+  if (password.length >= 8 && passedTests === 4) strength = "Strong";
+  else if (password.length >= 6 && passedTests >= 2) strength = "Medium";
+
+  return strength;
+};
+
+export { catchBlock, evaluateStrongPassword };
