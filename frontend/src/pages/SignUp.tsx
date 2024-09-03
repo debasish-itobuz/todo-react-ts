@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axios from "axios";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const signUpSchema = z
   .object({
@@ -24,7 +25,10 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 export default function SignUp() {
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -34,6 +38,21 @@ export default function SignUp() {
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
   });
+
+  const evaluateStrongPassword = (password: string) => {
+    let strength = "Weak";
+    const regexes = [/[a-z]/, /[A-Z]/, /\d/, /[!@#$%^&*(),.?":{}|<>]/];
+    const passedTests = regexes.filter((regex) => regex.test(password)).length;
+
+    if (password.length >= 8 && passedTests === 4) strength = "Strong";
+    else if (password.length >= 6 && passedTests >= 2) strength = "Medium";
+
+    setPasswordStrength(strength);
+
+    setTimeout(() => {
+      setPasswordStrength("");
+    }, 4000);
+  };
 
   const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
@@ -103,8 +122,8 @@ export default function SignUp() {
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
               {...register("email")}
               onChange={(e) => {
-                register("email").onChange(e); // Handle form change
-                setServerError(""); // Clear server error on email change
+                register("email").onChange(e);
+                setServerError("");
               }}
             />
             {errors.email && (
@@ -117,31 +136,62 @@ export default function SignUp() {
             )}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 relative">
             <label className="leading-7 text-sm text-gray-600">Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
               {...register("password")}
+              onChange={(e) => {
+                register("password").onChange(e);
+                evaluateStrongPassword(e.target.value);
+              }}
             />
-            {errors.password && (
+            <button
+              type="button"
+              className="absolute top-10 right-3 text-gray-500 text-xl"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+            {errors.password ? (
               <p className="text-red-500 text-xs mt-1">
                 {errors.password.message}
               </p>
+            ) : (
+              passwordStrength && (
+                <p
+                  className={`text-xs mt-1 ${
+                    passwordStrength === "Strong"
+                      ? "text-green-500"
+                      : passwordStrength === "Medium"
+                      ? "text-yellow-500"
+                      : "text-red-500"
+                  }`}
+                >
+                  Password Strength:{passwordStrength}
+                </p>
+              )
             )}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 relative">
             <label className="leading-7 text-sm text-gray-600">
               Confirm Password
             </label>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               id="confirmPassword"
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
               {...register("confirmPassword")}
             />
+            <span
+              className=" absolute top-10 right-3 text-xl text-gray-500 cursor-pointer"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
             {errors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.confirmPassword.message}

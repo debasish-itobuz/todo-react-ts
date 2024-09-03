@@ -5,6 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { GlobalContext } from "../components/UserContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const schema = z.object({
   email: z
@@ -28,6 +29,7 @@ export default function Login() {
   const { setUserDetails, setToken } = useContext(GlobalContext);
   const [authError, setAuthError] = useState<string | null>(null);
   const [verifyMessage, setVerifyMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
@@ -113,8 +115,9 @@ export default function Login() {
             <input
               type="email"
               {...register("email")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.email ? "border-red-500" : ""
-                }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                errors.email ? "border-red-500" : ""
+              }`}
               autoComplete="email"
             />
             {errors.email && (
@@ -127,15 +130,23 @@ export default function Login() {
             <p className="text-red-500 text-xs mb-4">{authError}</p>
           )}
 
-          <div className="mb-4">
+          <div className="mb-4 relative">
             <label className="leading-7 text-sm text-gray-600">Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               {...register("password")}
-              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${errors.password ? "border-red-500" : ""
-                }`}
+              className={`w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                errors.password ? "border-red-500" : ""
+              }`}
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              className="absolute top-10 right-3 text-gray-500 text-xl"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.password.message}

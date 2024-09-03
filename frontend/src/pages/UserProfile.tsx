@@ -7,8 +7,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Modal from "react-modal";
 
-// Modal.setAppElement("#root");
-
 const userProfileSchema: any = z.object({
   id: z.string().optional(),
   firstName: z.string().optional(),
@@ -45,7 +43,6 @@ type UserProfileFormData = z.infer<typeof userProfileSchema>;
 const UserProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useContext(GlobalContext);
   const [formError, setFormError] = useState("");
-  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -115,7 +112,6 @@ const UserProfile: React.FC = () => {
   ) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      // setSelectedFile(file);
 
       try {
         setIsUploading(true);
@@ -170,7 +166,6 @@ const UserProfile: React.FC = () => {
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      // setSelectedFile(file);
 
       try {
         setIsUploading(true);
