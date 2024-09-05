@@ -60,7 +60,9 @@ const updateTodo = async (req: Request, res: Response) => {
   try {
     const todo: Todo = req.body;
     todoValidation.parse(todo);
-    const data = await todoModel.findByIdAndUpdate(req.query.id, todo);
+    const data = await todoModel.findByIdAndUpdate(req.query.id, todo, {
+      new: true,
+    });
     return res.status(200).send({
       data: data,
       message: "Data updated successfully",

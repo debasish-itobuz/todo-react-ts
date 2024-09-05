@@ -7,7 +7,7 @@ import React, {
   useContext,
 } from "react";
 
-interface User {
+export interface User {
   data: {
     academics: [];
     videos:[];

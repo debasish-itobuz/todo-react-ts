@@ -74,7 +74,7 @@ export default function SignUp() {
       }, 3000);
     } catch (error) {
       console.log("Error", error);
-      setServerError("User exists or weak Password");
+      setServerError("User already exists or weak Password");
       setSuccessMessage("");
 
       setTimeout(() => {

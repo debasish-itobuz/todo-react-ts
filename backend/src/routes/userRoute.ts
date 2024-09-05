@@ -9,6 +9,7 @@ import {
   uploadProfilePicture,
   uploadVideo,
   deleteVideo,
+  getUserVideos,
 } from "../controllers/userController";
 import upload from "../multerConfig";
 
@@ -27,6 +28,7 @@ router.post(
 );
 
 router.post("/upload-video", upload.single("videos"), uploadVideo);
+router.get("/get-videos", getUserVideos);
 router.delete("/delete-video", deleteVideo);
 
 export default router;

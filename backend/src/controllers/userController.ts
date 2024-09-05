@@ -169,6 +169,30 @@ const uploadVideo = async (req: Request, res: Response) => {
   }
 };
 
+const getUserVideos = async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+
+    if (!userId) {
+      return res.status(400).send({ message: "User ID is required" });
+    }
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    res.status(200).send({
+      videos: user.videos,
+      message: "Videos retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error in getUserVideos:", error);
+    res.status(500).send({ message: "Failed to retrieve videos" });
+  }
+};
+
 const deleteVideo = async (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
@@ -347,4 +371,5 @@ export {
   uploadProfilePicture,
   uploadVideo,
   deleteVideo,
+  getUserVideos,
 };
