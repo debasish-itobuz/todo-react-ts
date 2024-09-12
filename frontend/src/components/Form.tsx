@@ -24,8 +24,6 @@ export default function Form({
   const userDetails = localStorage.getItem("userDetails");
   const userId = userDetails ? JSON.parse(userDetails).data._id : null;
 
-  console.log("userId", userId);
-
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -45,14 +43,13 @@ export default function Form({
         );
 
         setAvailableVideos(response.data.videos || []);
-        console.log("Response for video:", response.data);
       } catch (error) {
         console.error("Error fetching videos:", error);
-        setErrors("Error fetching videos:" + error);
+        setErrors("Error fetching videos: " + error);
       }
     };
     fetchVideos();
-  }, [setErrors]);
+  }, [userId, setErrors]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,8 +82,6 @@ export default function Form({
       );
 
       setIsCreate(!!response.data);
-      console.log("Response from server:", response.data);
-
       setTodoText("");
       setErrors("");
     } catch (error) {
@@ -112,7 +107,7 @@ export default function Form({
   const videoOptions = availableVideos.map((video) => ({
     label: video.title,
     value: video.url,
-    thumbnail: video.thumbnail,  // You can use this for future customization
+    thumbnail: video.thumbnail,
   }));
 
   return (
@@ -143,7 +138,6 @@ export default function Form({
           />
         </div>
         <button
-          onClick={() => setIsCreate(false)}
           type="submit"
           className="p-2 bg-green-600 rounded text-white ms-4"
         >

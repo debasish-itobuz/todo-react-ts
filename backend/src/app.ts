@@ -3,7 +3,6 @@ import { config } from "dotenv";
 config();
 import { env } from "./env";
 import cors from "cors";
-
 import todoRoutes from "./routes/todoRoute";
 import userRoutes from "./routes/userRoute";
 import connectToDb from "./config/dbConnection";

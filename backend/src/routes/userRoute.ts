@@ -7,10 +7,13 @@ import {
   updateUser,
   verifyEmail,
   uploadProfilePicture,
+} from "../controllers/userController";
+
+import {
   uploadVideo,
   deleteVideo,
   getUserVideos,
-} from "../controllers/userController";
+} from "../controllers/videoController";
 import upload from "../multerConfig";
 
 const router = Router();

@@ -12,9 +12,6 @@ import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
 import { profileValidation } from "../validators/profileValidators";
-import ffmpeg from "fluent-ffmpeg";
-import fs from "fs/promises";
-import path from "path";
 
 const generateVerificationToken = (): string => {
   return crypto.randomBytes(20).toString("hex");
@@ -97,151 +94,6 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
   } catch (e: any | ZodError) {
     console.error("Error in uploadProfilePicture:", e);
     return catchBlock(e, res, "Profile picture not uploaded");
-  }
-};
-
-const uploadVideo = async (req: Request, res: Response) => {
-  try {
-    const userId = req.query.id as string;
-    const video = req.file;
-
-    if (!video) {
-      return res.status(400).send({ message: "Video not received" });
-    }
-
-    if (!userId) {
-      return res.status(400).send({ message: "User ID is required" });
-    }
-
-    const thumbnailPath = path.join(
-      "thumbnail",
-      `${path.parse(video.filename).name}.png`
-    );
-
-    await new Promise<void>((resolve, reject) => {
-      ffmpeg(video.path)
-        .on("end", () => resolve())
-        .on("error", (err) => reject(err))
-        .screenshots({
-          timestamps: ["50%"], // Capture a frame at 50% of the video duration
-          filename: path.basename(thumbnailPath),
-          folder: path.dirname(thumbnailPath),
-        });
-    });
-
-    const data = await userModel.findByIdAndUpdate(
-      userId,
-      {
-        $push: {
-          videos: {
-            title: video.filename,
-            url: video.path,
-            thumbnail: thumbnailPath,
-          },
-        },
-      },
-      { new: true }
-    );
-
-    if (!data) return res.status(400).send({ message: "User not found" });
-
-    const response = {
-      id: data.id,
-      userName: data.userName,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      profilePicture: data.profilePicture,
-      phone: data.phone,
-      videos: data.videos,
-      academics: data.academics,
-      createdAt: data.createdAt,
-    };
-
-    return res.status(200).send({
-      data: response,
-      message: "Video uploaded successfully",
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    console.error("Error in uploadVideo:", e);
-    return catchBlock(e, res, "Video not uploaded");
-  }
-};
-
-const getUserVideos = async (req: Request, res: Response) => {
-  try {
-    const userId = req.query.userId as string;
-
-    if (!userId) {
-      return res.status(400).send({ message: "User ID is required" });
-    }
-
-    const user = await userModel.findById(userId);
-
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
-
-    res.status(200).send({
-      videos: user.videos,
-      message: "Videos retrieved successfully",
-    });
-  } catch (error) {
-    console.error("Error in getUserVideos:", error);
-    res.status(500).send({ message: "Failed to retrieve videos" });
-  }
-};
-
-const deleteVideo = async (req: Request, res: Response) => {
-  try {
-    const userId = req.query.userId as string;
-    const videoId = req.query.videoId as string;
-
-    if (!userId || !videoId) {
-      return res
-        .status(400)
-        .send({ message: "User ID and Video ID are required" });
-    }
-
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
-
-    const videoIndex = user.videos.findIndex(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (video) => (video as any)._id.toString() === videoId
-    );
-
-    if (videoIndex === -1) {
-      return res.status(404).send({ message: "Video not found" });
-    }
-
-    const video = user.videos[videoIndex];
-
-    // Remove video file
-    try {
-      await fs.unlink(video.url);
-      if (video.thumbnail) {
-        await fs.unlink(video.thumbnail);
-      }
-    } catch (err) {
-      console.error("Error deleting video file:", err);
-      return res.status(500).send({ message: "Failed to delete video file" });
-    }
-
-    user.videos.splice(videoIndex, 1);
-    await user.save();
-
-    return res.status(200).send({
-      data: user,
-      message: "Video deleted successfully",
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
-    console.error("Error in deleteVideo:", e);
-    return catchBlock(e, res, "Video not deleted");
   }
 };
 
@@ -369,7 +221,4 @@ export {
   getUser,
   verifyEmail,
   uploadProfilePicture,
-  uploadVideo,
-  deleteVideo,
-  getUserVideos,
 };

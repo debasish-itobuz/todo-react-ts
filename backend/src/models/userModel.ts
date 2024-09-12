@@ -1,4 +1,5 @@
 import mongoose, { Document } from "mongoose";
+import { videoSchema } from "./videoModel";
 
 export interface Academic {
   title: string;
@@ -39,20 +40,7 @@ const academicSchema = new mongoose.Schema<Academic>({
   },
 });
 
-const videoSchema = new mongoose.Schema<Video>({
-  title: {
-    type: String,
-    required: true,
-  },
-  url: {
-    type: String,
-    required: true,
-  },
-  thumbnail: {
-    type: String,
-    required: true,
-  },
-});
+
 
 const userSchema = new mongoose.Schema<User>(
   {

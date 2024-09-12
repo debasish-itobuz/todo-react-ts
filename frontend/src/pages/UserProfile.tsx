@@ -173,7 +173,7 @@ const UserProfile: React.FC = () => {
         uploadFormData.append("videos", file);
 
         const response = await axios.post(
-          `${backendUrl}/user/upload-video?id=${userDetails?.data._id}`,
+          `${backendUrl}/user/upload-video?userId=${userDetails?.data._id}`,
           uploadFormData,
           {
             headers: {
