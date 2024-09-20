@@ -6,8 +6,6 @@ import { config } from "dotenv";
 config();
 import { User, userValidation } from "../validators/userValidators";
 import { catchBlock, evaluateStrongPassword } from "../helper/commonCode";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ZodError } from "zod";
 import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
@@ -61,8 +59,7 @@ const postUser = async (req: Request, res: Response) => {
     }
 
     res.status(200).send({ data, message: "User added successfully" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+  } catch (e: unknown) {
     console.error("Error in postUser:", e);
     return catchBlock(e, res, "User not added");
   }
@@ -90,8 +87,7 @@ const uploadProfilePicture = async (req: Request, res: Response) => {
     } else {
       return res.status(400).send({ message: "Profile path not recieved" });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+  } catch (e: unknown) {
     console.error("Error in uploadProfilePicture:", e);
     return catchBlock(e, res, "Profile picture not uploaded");
   }
@@ -123,24 +119,22 @@ const loginUser = async (req: Request, res: Response) => {
     } else {
       return res.status(400).send({ message: "Credentials not correct" });
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+  } catch (e: unknown) {
     return catchBlock(e, res, "User not loged in");
   }
 };
 
 const getUser = async (req: Request, res: Response) => {
   try {
-    const data = await userModel.findById(req.query.id, { password: 0 });
+    const data = await userModel
+      .findById(req.query.id, { password: 0 })
+      .populate("videos");
 
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
       .status(200)
-      .send({ data: data, message: "User found successfully" });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+      .json({ data: data, message: "User found successfully" });
+  } catch (e: unknown) {
     return catchBlock(e, res, "User not updated");
   }
 };
@@ -162,10 +156,8 @@ const updateUser = async (req: Request, res: Response) => {
     if (!data) return res.status(400).send({ message: "User not found" });
     return res
       .status(200)
-      .send({ data: { ...updatedData }, message: "User updated successfully" });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
+      .json({ data: updatedData, message: "User updated successfully" });
+  } catch (e: unknown) {
     return catchBlock(e, res, "User not updated");
   }
 };
@@ -182,9 +174,7 @@ const deleteUser = async (req: Request, res: Response) => {
     return res
       .status(200)
       .send({ data: user, message: "User Deleted Successfully" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any | ZodError) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: unknown) {
     return catchBlock(e, res, "User not deleted");
   }
 };

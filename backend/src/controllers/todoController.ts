@@ -8,16 +8,15 @@ import { catchBlock } from "../helper/commonCode";
 // Controller function to create a new todo
 const postTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { videoId, title, status } = req.body;
+    const { videoId, title } = req.body;
 
     const userId = (req as CustomRequest).userId;
     const data = await todoModel.create({
       title,
-      status,
       userId,
       video: videoId,
+      status: "ToDo",
     });
-    // console.log("data", data);
 
     return res.status(200).send({
       data: data,
@@ -28,20 +27,31 @@ const postTodo = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to get all todos for a specific user
+// Controller function to get all todos for a specific user with optional status filter
 const getTodos = async (req: Request, res: Response): Promise<Response> => {
   try {
     const userId = (req as CustomRequest).userId;
+    const { status } = req.query;
+
+    // Build the filter based on userId and optional status
+    const filter: { userId: string; status?: string } = { userId };
+
+    // If status is provided, add it to the filter
+    if (status && typeof status === "string") {
+      filter.status = status;
+    }
+
+    // Find todos based on the filter and populate the video field
     const data = await todoModel
-      .find({ userId })
+      .find(filter)
       .populate({ path: "video", model: videoModel });
-    // console.log("data", data);
 
     return res.status(200).send({
       data: data,
       message: "Data fetched successfully",
     });
   } catch (err) {
+    console.log("Error", err);
     return res.status(400).send({
       data: null,
       message: "Data not fetched",
@@ -124,58 +134,4 @@ const deleteTodo = async (
   }
 };
 
-// Controller function to filter todos by status
-// const filterTodo = async (req: Request, res: Response): Promise<Response> => {
-//   try {
-//     const { status } = req.query;
-//     const data = await todoModel.find({ status }).populate("videoId");
-
-//     return res.status(200).send({
-//       data: data,
-//       message: "Data fetched successfully",
-//     });
-//   } catch (err) {
-//     console.log("Error", err);
-//     return res.status(400).send({
-//       data: null,
-//       message: "Data not fetched",
-//     });
-//   }
-// };
-
-
-const filterTodo = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const { status } = req.query;
-
-    // Convert status to a string and ensure it's valid if provided
-    const statusFilter = typeof status === 'string' ? status : undefined;
-
-    const filter: { status?: string } = {};
-    if (statusFilter) {
-      filter.status = statusFilter;
-    }
-
-    // Fetch todos based on the filter and populate the `video` field
-    const data = await todoModel
-      .find(filter)
-      .populate({
-        path: "video",
-        model: videoModel, // Populate video references
-      });
-
-    return res.status(200).send({
-      data: data,
-      message: "Data fetched successfully",
-    });
-  } catch (err) {
-    console.log("Error", err);
-    return res.status(400).send({
-      data: null,
-      message: "Data not fetched",
-    });
-  }
-};
-
-
-export { postTodo, getTodos, getTodoById, updateTodo, deleteTodo, filterTodo };
+export { postTodo, getTodos, getTodoById, updateTodo, deleteTodo };

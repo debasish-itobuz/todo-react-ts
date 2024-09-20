@@ -35,17 +35,16 @@ const List: React.FC = () => {
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string>("");
   const [filter, setFilter] = useState<string>("all");
   const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
-  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]); 
-
-  const userDetails = localStorage.getItem("userDetails");
-  const userId = userDetails ? JSON.parse(userDetails).data._id : null;
+  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
-    fetchAvailableVideos();
-  }, [isCreate, token]);
-
-  console.log("token", token);
+    const userDetails = localStorage.getItem("userDetails");
+    if (userDetails) {
+      const parsedDetails = JSON.parse(userDetails);
+      setUserId(parsedDetails?.data?._id || null);
+    }
+  }, []);
 
   async function fetchData() {
     try {
@@ -78,19 +77,26 @@ const List: React.FC = () => {
   const fetchAvailableVideos = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:4001/user/get-videos/?userId=${userId}`,
+        `http://localhost:4001/user/get-videos/?id=${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
+
       setAvailableVideos(response.data.videos || []);
     } catch (error) {
-     
       setError("Error fetching videos: " + error);
     }
   };
+
+  useEffect(() => {
+    if (userId) {
+      fetchData();
+      fetchAvailableVideos();
+    }
+  }, [isCreate, token, userId]);
 
   const handleEdit = (id: string, title: string, videos?: Video[]) => {
     const task = todos.find((todo) => todo._id === id);

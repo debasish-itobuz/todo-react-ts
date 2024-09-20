@@ -10,15 +10,12 @@ export default function VerifyUser() {
       const token = parsed.token;
 
       if (token) {
-        console.log("Token received:", token);
-
         const response = await axios.post(
           "http://localhost:4001/user/verify-email",
           {
             token: token,
           }
         );
-        console.log("Response", response.data);
       } else {
         console.log("Token not found in query string");
       }

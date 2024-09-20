@@ -20,9 +20,16 @@ export default function Form({
   const [todoText, setTodoText] = useState("");
   const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const userDetails = localStorage.getItem("userDetails");
-  const userId = userDetails ? JSON.parse(userDetails).data._id : null;
+  useEffect(() => {
+    // Fetch userId from localStorage after the component has mounted
+    const userDetails = localStorage.getItem("userDetails");
+    if (userDetails) {
+      const parsedDetails = JSON.parse(userDetails);
+      setUserId(parsedDetails?.data?._id || null);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -33,22 +40,27 @@ export default function Form({
           return;
         }
 
-        const response = await axios.get(
-          `http://localhost:4001/user/get-videos/?userId=${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        if (userId) {
+          const response = await axios.get(
+            `http://localhost:4001/user/get-videos/?id=${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
-        setAvailableVideos(response.data.videos || []);
+          setAvailableVideos(response.data.videos || []);
+        }
       } catch (error) {
         console.error("Error fetching videos:", error);
         setErrors("Error fetching videos: " + error);
       }
     };
-    fetchVideos();
+
+    if (userId) {
+      fetchVideos();
+    }
   }, [userId, setErrors]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -71,7 +83,6 @@ export default function Form({
         "http://localhost:4001/todo/create",
         {
           title: todoText,
-          status: "ToDo",
           videos: selectedVideos,
         },
         {
@@ -117,12 +128,13 @@ export default function Form({
     >
       <div className="flex gap-5">
         <label>
+          <h3 className="text-lg font-semibold mb-2">Task</h3>
           <input
             type="text"
             name="todo"
             id="todo"
             placeholder="Write your next task"
-            className="border p-2 rounded w-[21rem] focus:outline-none"
+            className="border p-2 h-10 rounded w-[21rem] focus:outline-none"
             value={todoText}
             onChange={handleChange}
           />
@@ -133,13 +145,13 @@ export default function Form({
             isMulti
             options={videoOptions}
             onChange={handleVideoSelection}
-            className="w-[21rem]"
+            className="w-[21rem] "
             placeholder="Choose videos..."
           />
         </div>
         <button
           type="submit"
-          className="p-2 bg-green-600 rounded text-white ms-4"
+          className="p-2 h-10 w-16 mt-8 bg-green-600 rounded text-white ms-4"
         >
           Add
         </button>

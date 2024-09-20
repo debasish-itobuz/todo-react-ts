@@ -9,7 +9,7 @@ import path from "path";
 // Upload Video
 const uploadVideo = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = req.query.id as string;
     const video = req.file;
 
     if (!video) {
@@ -45,7 +45,7 @@ const uploadVideo = async (req: Request, res: Response) => {
 
     await userModel.findByIdAndUpdate(
       userId,
-      { $push: { videos: newVideo._id } },
+      { $push: { videos: newVideo.id } },
       { new: true }
     );
 
@@ -95,7 +95,7 @@ const deleteVideo = async (req: Request, res: Response) => {
 // Get Videos by User ID
 const getUserVideos = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = req.query.id as string;
 
     if (!userId) {
       return res.status(400).send({ message: "User ID is required" });

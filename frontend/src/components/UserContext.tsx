@@ -7,12 +7,19 @@ import React, {
   useContext,
 } from "react";
 
+export interface Video {
+  title: string;
+  url: string;
+  thumbnail: string;
+  _id: string;
+}
+
 export interface User {
   data: {
     academics: [];
-    videos:[];
+    videos: Video[];
     id?: string;
-    _id?: string; 
+    _id?: string;
     firstName: string;
     lastName: string;
     phone: string;
@@ -38,9 +45,13 @@ export interface GlobalContextData {
 
 export const GlobalContext = createContext<GlobalContextData>({
   userDetails: null,
-  setUserDetails: () => { throw new Error("Function not implemented."); },
+  setUserDetails: () => {
+    throw new Error("Function not implemented.");
+  },
   token: null,
-  setToken: () => { throw new Error("Function not implemented."); },
+  setToken: () => {
+    throw new Error("Function not implemented.");
+  },
 });
 
 export const useToken = () => {
@@ -54,7 +65,9 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     return storedUserDetails ? JSON.parse(storedUserDetails) : null;
   });
 
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token")
+  );
 
   useEffect(() => {
     if (token) {

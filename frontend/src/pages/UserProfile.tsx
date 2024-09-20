@@ -74,6 +74,7 @@ const UserProfile: React.FC = () => {
     if (userDetails) {
       const userData = userDetails.data;
 
+      // Profile picture logic
       const profilePicture = userData.profilePicture
         ? `${
             userData.profilePicture.startsWith(backendUrl)
@@ -92,14 +93,18 @@ const UserProfile: React.FC = () => {
         Array.isArray(userData.academics) ? userData.academics : []
       );
       setValue("profilePicture", profilePicture);
-      const allVideos: {
-        title: string;
-        url: string;
-        _id: string;
-        thumbnail: string;
-      }[] = userData.videos || [];
-      setVideos(allVideos);
-      setValue("videos", allVideos);
+
+      // Ensure video thumbnail URLs are absolute
+
+      const videos = (userData.videos || []).map((video: any) => ({
+        ...video,
+        thumbnail: video.thumbnail
+          ? video.thumbnail
+          : `${backendUrl}/${video.thumbnail}`,
+      }));
+
+      setVideos(videos);
+      setValue("videos", videos);
     }
   };
 
@@ -173,7 +178,7 @@ const UserProfile: React.FC = () => {
         uploadFormData.append("videos", file);
 
         const response = await axios.post(
-          `${backendUrl}/user/upload-video?userId=${userDetails?.data._id}`,
+          `${backendUrl}/user/upload-video?id=${userDetails?.data._id}`,
           uploadFormData,
           {
             headers: {
@@ -182,34 +187,15 @@ const UserProfile: React.FC = () => {
           }
         );
 
-        let allVideos: {
-          title: string;
-          url: string;
-          _id: string;
-          thumbnail: string;
-        }[] = [];
-        if (response.data.data.videos) {
-          for (let video of response.data.data.videos) {
-            allVideos.push({
-              title: video.title,
-              url: video.url,
-              _id: video._id,
-              thumbnail: video.thumbnail,
-            });
-          }
-        }
-
-        setVideos(allVideos);
-
-        setValue("videos", allVideos);
-        console.log("allvid", allVideos);
+        const video = response.data.data;
+        setValue("videos", userDetails?.data.videos.concat(video));
 
         setUserDetails((prev: any) => {
           if (prev) {
             const updatedUserDetails = {
               data: {
                 ...prev.data,
-                videos: allVideos,
+                videos: getValues("videos"),
               },
             };
 
@@ -262,7 +248,6 @@ const UserProfile: React.FC = () => {
       );
       setVideos(updatedVideos);
       setValue("videos", updatedVideos);
-      console.log("updatedVids", updatedVideos);
 
       // Update user details with the new list of videos
       setUserDetails((prev: any) => {
@@ -297,7 +282,6 @@ const UserProfile: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<UserProfileFormData> = async (data) => {
-    console.log("data", data);
     try {
       await axios.put(`${backendUrl}/user/update?id=${data.id}`, data);
 

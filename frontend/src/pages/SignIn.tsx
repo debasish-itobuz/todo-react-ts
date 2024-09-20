@@ -55,7 +55,6 @@ export default function Login() {
 
       if (loginData) {
         getUser().then((userResponse) => {
-          console.log(userResponse);
           userResponse.data.videos = userResponse.data.videos.map((e: any) => {
             return {
               title: e.title,
@@ -64,7 +63,7 @@ export default function Login() {
               thumbnail: e.thumbnail,
             };
           });
-          console.log("userDatass", userResponse);
+
           localStorage.setItem("userDetails", JSON.stringify(userResponse));
           setUserDetails(userResponse);
         });

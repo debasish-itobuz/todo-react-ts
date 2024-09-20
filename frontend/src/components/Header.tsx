@@ -55,7 +55,7 @@ const Header = () => {
             >
               {`Hello, ${userDetails?.data?.userName}`}
             </h3>
-            <button className="text-gray-900" onClick={handleLogout}>
+            <button className="text-gray-900 bg-gray-100 p-1 rounded" onClick={handleLogout}>
               Logout
             </button>
           </div>

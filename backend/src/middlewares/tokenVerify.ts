@@ -21,8 +21,7 @@ async function verifyToken(req: Request, res: Response, next: NextFunction) {
           throw new Error("Wrong Token");
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (req as CustomRequest).userId = (decoded as any).user.userId;
+        (req as CustomRequest).userId = (decoded as jwt.JwtPayload).user.userId;
         next();
       });
     } else {

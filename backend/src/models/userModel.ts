@@ -1,5 +1,5 @@
 import mongoose, { Document } from "mongoose";
-import { videoSchema } from "./videoModel";
+import videoModel from "./videoModel";
 
 export interface Academic {
   title: string;
@@ -40,8 +40,6 @@ const academicSchema = new mongoose.Schema<Academic>({
   },
 });
 
-
-
 const userSchema = new mongoose.Schema<User>(
   {
     userName: {
@@ -72,10 +70,12 @@ const userSchema = new mongoose.Schema<User>(
       type: [academicSchema],
       default: [],
     },
-    videos: {
-      type: [videoSchema],
-      default: [],
-    },
+    videos: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: videoModel,
+      },
+    ],
     password: {
       type: String,
     },

@@ -8,7 +8,8 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true /* Skip type checking .d.ts files that are included with TypeScript. */,
     "skipLibCheck": true,
-    "types": ["node", "express"] /* Skip type checking all .d.ts files. */
+    "types": ["node", "express"] /* Skip type checking all .d.ts files. */,
+    "useUnknownInCatchVariables": true
   },
   "include": ["./src"]
 }

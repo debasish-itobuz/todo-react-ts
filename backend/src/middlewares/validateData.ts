@@ -8,7 +8,6 @@ const validateData = (schema: ZodSchema) => {
       schema.parse(req.body); // Validate the request body against the schema
       next(); // If validation is successful, proceed to the next middleware or controller
     } catch (err: unknown) {
-      //   return res.status(400).send({ message: err || "Invalid request data" });
       return res.status(400).send({ message: err || "Invalid request data" });
     }
   };
