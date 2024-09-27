@@ -15,11 +15,15 @@ import {
   getUserVideos,
 } from "../controllers/videoController";
 import upload from "../multerConfig";
+import verifyToken from "../middlewares/tokenVerify";
 
 const router = Router();
 
 router.post("/register", upload.single("profilePicture"), postUser);
 router.post("/login", loginUser);
+
+
+router.use(verifyToken);
 router.post("/verify-email", verifyEmail);
 router.delete("/delete", deleteUser);
 router.put("/update", updateUser);

@@ -11,5 +11,5 @@
     "types": ["node", "express"] /* Skip type checking all .d.ts files. */,
     "useUnknownInCatchVariables": true
   },
-  "include": ["./src"]
+  "include": ["./src", "../frontend/src/axiosConfig.ts"]
 }

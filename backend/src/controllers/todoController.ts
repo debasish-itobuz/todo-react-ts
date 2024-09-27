@@ -5,12 +5,13 @@ import { CustomRequest } from "../middlewares/tokenVerify";
 import { todoValidation } from "../validators/todoValidators";
 import { catchBlock } from "../helper/commonCode";
 
-// Controller function to create a new todo
 const postTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { videoId, title } = req.body;
-
     const userId = (req as CustomRequest).userId;
+
+    console.log("userId", userId);
+
     const data = await todoModel.create({
       title,
       userId,
@@ -23,6 +24,7 @@ const postTodo = async (req: Request, res: Response): Promise<Response> => {
       message: "Data added successfully",
     });
   } catch (e: unknown) {
+    console.error("Error in postTodo:", e);
     return catchBlock(e, res, "Data not added");
   }
 };
@@ -44,7 +46,7 @@ const getTodos = async (req: Request, res: Response): Promise<Response> => {
     // Find todos based on the filter and populate the video field
     const data = await todoModel
       .find(filter)
-      .populate({ path: "video", model: videoModel });
+      .select("title userId status video");
 
     return res.status(200).send({
       data: data,
@@ -64,7 +66,7 @@ const getTodoById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const data = await todoModel
       .findById(req.query.id)
-      .populate({ path: "video", model: videoModel });
+      .select("title userId status video");
 
     return res.status(200).send({
       data: data,
@@ -82,6 +84,7 @@ const getTodoById = async (req: Request, res: Response): Promise<Response> => {
 // Controller function to update a todo by its ID
 const updateTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
+    console.log("query", req.query);
     const { videoId, ...todo } = req.body;
 
     todoValidation.parse({ ...todo, videoId }); // Validate the todo data
@@ -103,7 +106,7 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
         { ...todo, video: videoId }, // Update with the array of video IDs
         { new: true }
       )
-      .populate({ path: "video", model: videoModel }); // Populate video references
+      .select("title userId status video");
 
     return res.status(200).send({
       data: data,

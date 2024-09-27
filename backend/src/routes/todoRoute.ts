@@ -16,7 +16,7 @@ router.use(verifyToken);
 
 router.post("/create", validateData(todoValidation), postTodo);
 router.get("/get", getTodos);
-router.get("/get-by-id",  getTodoById);
+router.get("/get-by-id", getTodoById);
 router.put("/update", validateData(todoValidation), updateTodo);
 router.delete("/delete", deleteTodo);
 

@@ -10,6 +10,7 @@ import { sendVerificationEmail } from "../EmailVerify/mailVerify";
 import crypto from "crypto";
 import todoModel from "../models/todoModel";
 import { profileValidation } from "../validators/profileValidators";
+import { CustomRequest } from "../middlewares/tokenVerify";
 
 const generateVerificationToken = (): string => {
   return crypto.randomBytes(20).toString("hex");
@@ -68,7 +69,7 @@ const postUser = async (req: Request, res: Response) => {
 const uploadProfilePicture = async (req: Request, res: Response) => {
   try {
     if (req?.file?.path) {
-      const userId = req.query.id;
+      const userId = (req as CustomRequest).userId;
       const profilePicture = req.file.path;
 
       if (!userId)
@@ -126,8 +127,9 @@ const loginUser = async (req: Request, res: Response) => {
 
 const getUser = async (req: Request, res: Response) => {
   try {
+    const userId = (req as CustomRequest).userId;
     const data = await userModel
-      .findById(req.query.id, { password: 0 })
+      .findById(userId, { password: 0 })
       .populate("videos");
 
     if (!data) return res.status(400).send({ message: "User not found" });
@@ -141,10 +143,12 @@ const getUser = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   try {
+    const userId = (req as CustomRequest).userId;
+
     profileValidation.parse(req.body);
     const { firstName, lastName, phone, academics, profilePicture } = req.body;
 
-    const data = await userModel.findByIdAndUpdate(req.query.id, {
+    const data = await userModel.findByIdAndUpdate(userId, {
       firstName,
       lastName,
       phone,

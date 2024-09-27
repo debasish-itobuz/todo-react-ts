@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Link } from "react-router-dom";
 import { GlobalContext } from "../components/UserContext";
 import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Modal from "react-modal";
+import axiosInstance from "../axiosConfig";
 
 const userProfileSchema: any = z.object({
   id: z.string().optional(),
@@ -50,8 +51,17 @@ const UserProfile: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
+
+  useEffect(() => {
+    const userDetails = localStorage.getItem("userDetails");
+    if (userDetails) {
+      const parsedDetails = JSON.parse(userDetails);
+      setUserId(parsedDetails?.data?._id || null);
+    }
+  }, []);
 
   const {
     register,
@@ -69,6 +79,36 @@ const UserProfile: React.FC = () => {
     control,
     name: "academics",
   });
+
+  useEffect(() => {
+    if (userId) {
+      const getUser = async () => {
+        try {
+          const response = await axiosInstance.get("/user/get-user");
+
+          return response.data;
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            return error.response?.data;
+          }
+        }
+      };
+
+      getUser().then((userResponse) => {
+        userResponse.data.videos = userResponse.data.videos.map((e: any) => {
+          return {
+            title: e.title,
+            url: e.url,
+            _id: e._id,
+            thumbnail: e.thumbnail,
+          };
+        });
+
+        localStorage.setItem("userDetails", JSON.stringify(userResponse));
+        setUserDetails(userResponse);
+      });
+    }
+  }, [userId]);
 
   const loadUserData = () => {
     if (userDetails) {
@@ -110,7 +150,7 @@ const UserProfile: React.FC = () => {
 
   useEffect(() => {
     loadUserData();
-  }, [userDetails]);
+  }, [setValue, isUploading]);
 
   const handleProfilePicture = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -123,8 +163,8 @@ const UserProfile: React.FC = () => {
         const uploadFormData = new FormData();
         uploadFormData.append("profilePicture", file);
 
-        const response = await axios.post(
-          `${backendUrl}/user/upload-profile?id=${userDetails?.data._id}`,
+        const response = await axiosInstance.post(
+          `/user/upload-profile`,
           uploadFormData,
           {
             headers: {
@@ -177,8 +217,8 @@ const UserProfile: React.FC = () => {
         const uploadFormData = new FormData();
         uploadFormData.append("videos", file);
 
-        const response = await axios.post(
-          `${backendUrl}/user/upload-video?id=${userDetails?.data._id}`,
+        const response = await axiosInstance.post(
+          `/user/upload-video`,
           uploadFormData,
           {
             headers: {
@@ -238,9 +278,7 @@ const UserProfile: React.FC = () => {
         return;
       }
 
-      await axios.delete(
-        `${backendUrl}/user/delete-video?userId=${userDetails?.data._id}&videoId=${videoId}`
-      );
+      await axiosInstance.delete(`/user/delete-video?videoId=${videoId}`);
 
       // Update state to remove the deleted video
       const updatedVideos = videos.filter(
@@ -283,7 +321,7 @@ const UserProfile: React.FC = () => {
 
   const onSubmit: SubmitHandler<UserProfileFormData> = async (data) => {
     try {
-      await axios.put(`${backendUrl}/user/update?id=${data.id}`, data);
+      await axiosInstance.put(`/user/update`, data);
 
       setUserDetails((prev: any) => {
         if (prev) {

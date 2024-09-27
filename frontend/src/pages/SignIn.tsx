@@ -1,11 +1,12 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios, { AxiosError } from "axios";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { GlobalContext } from "../components/UserContext";
+import axiosInstance from "../axiosConfig"; 
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
 
 const schema = z.object({
   email: z
@@ -33,21 +34,18 @@ export default function Login() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const response = await axios.post(
-        "http://localhost:4001/user/login",
-        data
-      );
+      const response = await axiosInstance.post("/user/login", data); // Use axiosInstance here
       const loginData = response.data;
+
+      setToken(loginData.data.token);
+      localStorage.setItem("token", `Bearer ${loginData.data.token}`);
 
       const getUser = async () => {
         try {
-          const response = await axios.get(
-            `http://localhost:4001/user/get-user?id=${loginData.data.id}`
-          );
-
+          const response = await axiosInstance.get("/user/get-user"); // Use axiosInstance here
           return response.data;
         } catch (error) {
-          if (error instanceof AxiosError) {
+          if (axios.isAxiosError(error)) {
             return error.response?.data;
           }
         }
@@ -68,15 +66,12 @@ export default function Login() {
           setUserDetails(userResponse);
         });
 
-        setToken(loginData.data.token);
-        localStorage.setItem("token", `Bearer ${loginData.data.token}`);
-
         navigate("/todolist");
       }
     } catch (error: any) {
       console.error("Login error:", error);
 
-      if (error.response.data.message) {
+      if (error.response?.data?.message) {
         setVerifyMessage(error.response.data.message);
       } else {
         setAuthError("Invalid credentials !!");

@@ -1,8 +1,9 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import Select from "react-select";
+import VideoSelect from "./VideoSelect";
+import axiosInstance from "../axiosConfig";
 
 export type Video = {
+  _id: string; // Include _id to represent the videoId
   title: string;
   url: string;
   thumbnail: string;
@@ -12,56 +13,24 @@ export default function Form({
   setIsCreate,
   setErrors,
   errors,
+  videoList,
 }: {
   setIsCreate: React.Dispatch<React.SetStateAction<boolean>>;
   setErrors: React.Dispatch<React.SetStateAction<string>>;
   errors: string;
+  videoList: Video[];
 }) {
   const [todoText, setTodoText] = useState("");
-  const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
-  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]); // Store only video IDs
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch userId from localStorage after the component has mounted
     const userDetails = localStorage.getItem("userDetails");
     if (userDetails) {
       const parsedDetails = JSON.parse(userDetails);
       setUserId(parsedDetails?.data?._id || null);
     }
   }, []);
-
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setErrors("Authorization token is missing.");
-          return;
-        }
-
-        if (userId) {
-          const response = await axios.get(
-            `http://localhost:4001/user/get-videos/?id=${userId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          setAvailableVideos(response.data.videos || []);
-        }
-      } catch (error) {
-        console.error("Error fetching videos:", error);
-        setErrors("Error fetching videos: " + error);
-      }
-    };
-
-    if (userId) {
-      fetchVideos();
-    }
-  }, [userId, setErrors]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,21 +48,14 @@ export default function Form({
         return;
       }
 
-      const response = await axios.post(
-        "http://localhost:4001/todo/create",
-        {
-          title: todoText,
-          videos: selectedVideos,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axiosInstance.post("/todo/create", {
+        title: todoText,
+        videoId: selectedVideoIds, // Send only the video IDs
+      });
 
       setIsCreate(!!response.data);
       setTodoText("");
+      setSelectedVideoIds([]); // Clear selected videos after submission
       setErrors("");
     } catch (error) {
       console.error("Error posting data:", error);
@@ -106,20 +68,16 @@ export default function Form({
     setErrors("");
   };
 
-  const handleVideoSelection = (selectedOptions: any) => {
+  // Handle video selection and store only video IDs
+  const handleVideoSelect = (selectedOptions: any) => {
     const selected = selectedOptions.map((option: any) => ({
+      _id: option.value, // Assuming the value is the _id of the video
       title: option.label,
-      url: option.value,
+      url: option.url,
       thumbnail: option.thumbnail,
     }));
-    setSelectedVideos(selected);
+    VideoSelect(selected);
   };
-
-  const videoOptions = availableVideos.map((video) => ({
-    label: video.title,
-    value: video.url,
-    thumbnail: video.thumbnail,
-  }));
 
   return (
     <form
@@ -141,12 +99,12 @@ export default function Form({
         </label>
         <div className="">
           <h3 className="text-lg font-semibold mb-2">Select Videos</h3>
-          <Select
-            isMulti
-            options={videoOptions}
-            onChange={handleVideoSelection}
-            className="w-[21rem] "
-            placeholder="Choose videos..."
+          <VideoSelect
+            videoList={videoList}
+            selectedVideos={videoList.filter((video) =>
+              selectedVideoIds.includes(video._id)
+            )}
+            onVideoSelect={handleVideoSelect} // This function should return an array of Video objects, including the _id
           />
         </div>
         <button

@@ -5,11 +5,13 @@ import { catchBlock } from "../helper/commonCode";
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs/promises";
 import path from "path";
+import { CustomRequest } from "../middlewares/tokenVerify";
 
 // Upload Video
 const uploadVideo = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.id as string;
+    const userId = (req as CustomRequest).userId;
+    
     const video = req.file;
 
     if (!video) {
@@ -59,18 +61,31 @@ const uploadVideo = async (req: Request, res: Response) => {
   }
 };
 
-// Delete Video
+
 const deleteVideo = async (req: Request, res: Response) => {
   try {
+    const userId = (req as CustomRequest).userId;
     const videoId = req.query.videoId as string;
 
     if (!videoId) {
       return res.status(400).send({ message: "Video ID is required" });
     }
 
+    if (!userId) {
+      return res.status(400).send({ message: "User ID is required" });
+    }
+
     const video = await videoModel.findById(videoId);
+
     if (!video) {
       return res.status(404).send({ message: "Video not found" });
+    }
+
+    // Ensure the video belongs to the user making the request
+    if (video.userId.toString() !== userId) {
+      return res
+        .status(403)
+        .send({ message: "Unauthorized to delete this video" });
     }
 
     // Remove video file
@@ -95,7 +110,7 @@ const deleteVideo = async (req: Request, res: Response) => {
 // Get Videos by User ID
 const getUserVideos = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.id as string;
+    const userId = (req as CustomRequest).userId;
 
     if (!userId) {
       return res.status(400).send({ message: "User ID is required" });

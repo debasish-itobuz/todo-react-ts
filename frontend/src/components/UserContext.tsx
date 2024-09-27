@@ -3,7 +3,6 @@ import React, {
   ReactNode,
   useMemo,
   useState,
-  useEffect,
   useContext,
 } from "react";
 
@@ -68,14 +67,6 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem("token")
   );
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
-  }, [token]);
 
   const valueObj: GlobalContextData = useMemo(
     () => ({

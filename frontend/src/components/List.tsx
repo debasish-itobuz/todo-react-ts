@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
 import { FaRegEdit } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import Form from "./Form";
-import Select from "react-select";
-
-enum Status {
-  todo = "ToDo",
-  completed = "Completed",
-}
+import VideoSelect from "./VideoSelect";
+import { GlobalContext } from "./UserContext";
+import axiosInstance from "../axiosConfig";
 
 export type Video = {
+  _id: string;
   title: string;
   url: string;
   thumbnail: string;
@@ -19,8 +16,8 @@ export type Video = {
 export type TodoItem = {
   _id: string;
   title: string;
-  status: Status;
   checked: boolean;
+  status: "ToDo" | "Completed";
   videos?: Video[];
 };
 
@@ -36,15 +33,8 @@ const List: React.FC = () => {
   const [filter, setFilter] = useState<string>("all");
   const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const userDetails = localStorage.getItem("userDetails");
-    if (userDetails) {
-      const parsedDetails = JSON.parse(userDetails);
-      setUserId(parsedDetails?.data?._id || null);
-    }
-  }, []);
+  const { userDetails } = useContext(GlobalContext);
 
   async function fetchData() {
     try {
@@ -53,17 +43,13 @@ const List: React.FC = () => {
         return;
       }
 
-      const response = await axios.get("http://localhost:4001/todo/get", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get("/todo/get");
 
       if (response && response.data && response.data.data) {
         const initialTodos: TodoItem[] = response.data.data.map(
           (item: any) => ({
             ...item,
-            checked: item.status === Status.completed,
+            checked: item.status === "Completed",
           })
         );
         setTodos(initialTodos);
@@ -76,85 +62,35 @@ const List: React.FC = () => {
 
   const fetchAvailableVideos = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:4001/user/get-videos/?id=${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setAvailableVideos(response.data.videos || []);
+      const response = await axiosInstance.get(`/user/get-videos/`);
+      const videos = response.data.videos.map((video: any) => ({
+        _id: video._id,
+        title: video.title,
+        url: video.url,
+        thumbnail: video.thumbnail,
+      }));
+      setAvailableVideos(videos || []);
     } catch (error) {
       setError("Error fetching videos: " + error);
     }
   };
 
   useEffect(() => {
-    if (userId) {
+    if (userDetails) {
       fetchData();
       fetchAvailableVideos();
     }
-  }, [isCreate, token, userId]);
+  }, [isCreate, token, userDetails]);
 
   const handleEdit = (id: string, title: string, videos?: Video[]) => {
     const task = todos.find((todo) => todo._id === id);
-    if (task && task.status !== Status.completed) {
+    if (task && task.status !== "Completed") {
       setEditMode(!editMode);
       setEditId(id);
       setEditTitle(title);
       setSelectedVideos(videos || []);
     }
   };
-
-  const handleUpdate = async (id: string, title: string, checked: boolean) => {
-    try {
-      if (!token) {
-        setError("Authorization token is missing.");
-        return;
-      }
-
-      const response = await axios.put(
-        `http://localhost:4001/todo/update?id=${id}`,
-        {
-          title: title,
-          status: checked ? Status.completed : Status.todo,
-          videos: selectedVideos,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setEditMode(false);
-        setEditId("");
-        setEditTitle("");
-        fetchData();
-      }
-    } catch (error) {
-      console.error("Error updating todo:", error);
-      setError("Error updating todo: " + error);
-    }
-  };
-
-  const handleVideoSelection = (selectedOptions: any) => {
-    const selected = selectedOptions.map((option: any) => ({
-      title: option.label,
-      url: option.value,
-      thumbnail: option.thumbnail,
-    }));
-    setSelectedVideos(selected);
-  };
-
-  const videoOptions = availableVideos.map((video) => ({
-    label: video.title,
-    value: video.url,
-    thumbnail: video.thumbnail,
-  }));
 
   const handleCancelEdit = () => {
     setEditMode(false);
@@ -166,118 +102,221 @@ const List: React.FC = () => {
     setDeleteConfirmationId(id);
   };
 
-  const handleConfirmDelete = async (id: string) => {
+  const handleUpdate = async (id: string, title: string, checked: boolean) => {
     try {
       if (!token) {
         setError("Authorization token is missing.");
         return;
       }
 
-      const response = await axios.delete(
-        `http://localhost:4001/todo/delete?id=${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const status = checked ? "Completed" : "ToDo";
 
-      if (response.status === 200) {
-        fetchData();
-        setDeleteConfirmationId("");
+      await axiosInstance.put(`/todo/update/?id=${id}`, {
+        title,
+        status,
+        videoId: selectedVideos,
+      });
+
+      setTodos((prevTodos) =>
+        prevTodos.map((todo) =>
+          todo._id === id ? { ...todo, title, status } : todo
+        )
+      );
+      setEditMode(false);
+      setError("");
+      setEditId("");
+      setEditTitle("");
+      fetchData();
+    } catch (error) {
+      console.error("Error updating todo:", error);
+      setError("Error updating todo: " + error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      if (!token) {
+        setError("Authorization token is missing.");
+        return;
       }
+
+      await axiosInstance.delete(`/todo/delete/?id=${id}`);
+
+      setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
+      setError("");
+      setDeleteConfirmationId("");
+      fetchData();
     } catch (error) {
       console.error("Error deleting todo:", error);
       setError("Error deleting todo: " + error);
     }
   };
 
+  const handleCancelDelete = () => {
+    setDeleteConfirmationId("");
+  };
+
+  const handleChange = async (id: string) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo._id === id) {
+        const updatedTodo = { ...todo, checked: !todo.checked };
+        handleUpdate(id, updatedTodo.title, updatedTodo.checked);
+        return updatedTodo;
+      }
+      return todo;
+    });
+    setTodos(updatedTodos);
+  };
+  const filteredTodos = todos.filter((todo) => {
+    if (filter === "all") return true;
+    else if (filter === "todos") return todo.status === "ToDo";
+    else if (filter === "completed") return todo.status === "Completed";
+    else return true;
+  });
+
   return (
-    <div className="todo-list">
-      <Form setIsCreate={setIsCreate} errors={error} setErrors={setError} />
-      <ul className="todos mt-4">
-        {todos.map((item) => (
-          <li key={item._id} className="todo-item mb-2 flex flex-col">
-            {editMode && editId === item._id ? (
-              <>
+    <div className="w-full min-h-screen bg-gray-100 py-6">
+      <Form
+        setIsCreate={setIsCreate}
+        setErrors={setError}
+        errors={error}
+        videoList={availableVideos}
+      />
+
+      <div className="mt-6">
+        {todos.length === 0 ? (
+          <p className="text-center text-gray-500">Empty list, add tasks..</p>
+        ) : (
+          <div className="flex justify-center gap-4 mb-4">
+            <button
+              className={`px-3 py-1 rounded ${
+                filter === "all" ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+              onClick={() => setFilter("all")}
+            >
+              All
+            </button>
+            <button
+              className={`px-3 py-1 rounded ${
+                filter === "todos" ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+              onClick={() => setFilter("todos")}
+            >
+              ToDos
+            </button>
+            <button
+              className={`px-3 py-1 rounded ${
+                filter === "completed"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
+              }`}
+              onClick={() => setFilter("completed")}
+            >
+              Completed
+            </button>
+          </div>
+        )}
+        <div className="flex flex-col items-start mx-auto w-[25rem] min-h-[5rem] max-h-[33rem] relative overflow-y-scroll">
+          {filteredTodos.map((item) => (
+            <div
+              key={item._id}
+              className="m-2 gap-2 p-2 border w-96 rounded overflow-auto flex flex-shrink-0  justify-between items-center"
+            >
+              <div className="flex gap-4 items-center w-80 overflow-scroll">
                 <input
-                  type="text"
-                  className="border rounded p-1 w-56"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
+                  type="checkbox"
+                  // checked={item.checked}
+                  onClick={() => setError("")}
+                  onChange={() => handleChange(item._id)}
+                  className="cursor-pointer"
                 />
-                <Select
-                  isMulti
-                  options={videoOptions}
-                  onChange={handleVideoSelection}
-                  value={selectedVideos.map((video) => ({
-                    label: video.title,
-                    value: video.url,
-                  }))}
-                  className="w-[21rem]"
-                  placeholder="Choose videos..."
-                />
-                <button
-                  className="text-sm bg-green-500 text-white py-1 px-2 rounded mt-2"
-                  onClick={() =>
-                    handleUpdate(item._id, editTitle, item.checked)
-                  }
-                >
-                  Update
-                </button>
-                <button
-                  className="text-sm bg-gray-400 text-white py-1 px-2 rounded mt-2"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <div
-                className={`${
-                  item.status === Status.completed ? " line-through" : ""
-                }`}
-              >
-                {item.title}
-              </div>
-            )}
-            <div className="flex gap-2">
-              {item.videos?.map((video, idx) => (
-                <div key={idx} className="video-thumbnail">
-                  <a href={video.url} target="_blank" rel="noopener noreferrer">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-12 h-12"
+                {editMode && editId === item._id ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="border p-2 h-10 rounded focus:outline-none"
                     />
-                  </a>
+                  </div>
+                ) : (
+                  <div
+                    className={`${
+                      item.status === "Completed" ? " line-through" : ""
+                    }`}
+                  >
+                    {item.title}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-4 items-center w-28">
+                {editMode && editId === item._id ? (
+                  <>
+                    <button
+                      className="text-gray-900 bg-green-300 p-1 rounded"
+                      onClick={() =>
+                        handleUpdate(item._id, editTitle, item.checked)
+                      }
+                      disabled={!editTitle.trim()}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="text-gray-900 bg-gray-300 p-1 rounded"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <FaRegEdit
+                    className={`text-xl ms-2 ${
+                      item.status === "Completed"
+                        ? " cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                    onClick={() => {
+                      handleEdit(item._id, item.title);
+                      setError("");
+                    }}
+                  />
+                )}
+
+                <MdDeleteOutline
+                  className="text-2xl cursor-pointer"
+                  onClick={() => {
+                    handleDeleteClick(item._id);
+                    setError("");
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+          {deleteConfirmationId && (
+            <div className="absolute top-0 left-10 right-0 bottom-0 flex items-center ">
+              <div className="bg-gray-300 p-4 rounded shadow-lg">
+                <p className="mb-2">
+                  Are you sure you want to delete this task?
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    className="bg-red-500 text-white p-2 rounded"
+                    onClick={() => handleDelete(deleteConfirmationId)}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="bg-gray-500 text-white p-2 rounded"
+                    onClick={handleCancelDelete}
+                  >
+                    No
+                  </button>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="todo-actions flex gap-2 mt-2">
-              <FaRegEdit
-                className="text-blue-500 cursor-pointer"
-                onClick={() =>
-                  handleEdit(item._id, item.title, item.videos || [])
-                }
-              />
-              <MdDeleteOutline
-                className="text-red-500 cursor-pointer"
-                onClick={() => handleDeleteClick(item._id)}
-              />
-              {deleteConfirmationId === item._id && (
-                <button
-                  className="bg-red-600 text-white px-2 py-1 rounded"
-                  onClick={() => handleConfirmDelete(item._id)}
-                >
-                  Confirm Delete
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="error mt-2">{error && <p>{error}</p>}</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
