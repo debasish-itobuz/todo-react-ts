@@ -10,8 +10,6 @@ const postTodo = async (req: Request, res: Response): Promise<Response> => {
     const { videoId, title } = req.body;
     const userId = (req as CustomRequest).userId;
 
-    console.log("userId", userId);
-
     const data = await todoModel.create({
       title,
       userId,
@@ -29,21 +27,18 @@ const postTodo = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to get all todos for a specific user with optional status filter
+// Controller function to get all todos
 const getTodos = async (req: Request, res: Response): Promise<Response> => {
   try {
     const userId = (req as CustomRequest).userId;
     const { status } = req.query;
 
-    // Build the filter based on userId and optional status
     const filter: { userId: string; status?: string } = { userId };
 
-    // If status is provided, add it to the filter
     if (status && typeof status === "string") {
       filter.status = status;
     }
 
-    // Find todos based on the filter and populate the video field
     const data = await todoModel
       .find(filter)
       .select("title userId status video");
@@ -84,13 +79,11 @@ const getTodoById = async (req: Request, res: Response): Promise<Response> => {
 // Controller function to update a todo by its ID
 const updateTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
-    console.log("query", req.query);
     const { videoId, ...todo } = req.body;
 
-    todoValidation.parse({ ...todo, videoId }); // Validate the todo data
+    todoValidation.parse({ ...todo, videoId }); 
 
     if (videoId && Array.isArray(videoId)) {
-      // Loop through and validate each video ID
       for (const id of videoId) {
         const video = await videoModel.findById(id);
         if (!video) {

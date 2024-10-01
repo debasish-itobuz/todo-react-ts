@@ -25,7 +25,7 @@ const postUser = async (req: Request, res: Response) => {
     const passwordStrength = evaluateStrongPassword(user.password);
     if (passwordStrength === "Weak" || passwordStrength === "Medium") {
       return res.status(400).send({
-        message: "Passwork too weak. Please choose a strong Password",
+        message: "Password too weak. Please choose a strong Password",
       });
     }
 

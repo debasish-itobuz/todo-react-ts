@@ -34,7 +34,7 @@ export default function Login() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const response = await axiosInstance.post("/user/login", data); // Use axiosInstance here
+      const response = await axiosInstance.post("/user/login", data); 
       const loginData = response.data;
 
       setToken(loginData.data.token);
@@ -42,7 +42,7 @@ export default function Login() {
 
       const getUser = async () => {
         try {
-          const response = await axiosInstance.get("/user/get-user"); // Use axiosInstance here
+          const response = await axiosInstance.get("/user/get-user"); 
           return response.data;
         } catch (error) {
           if (axios.isAxiosError(error)) {

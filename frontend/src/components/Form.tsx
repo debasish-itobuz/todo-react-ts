@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
-import VideoSelect from "./VideoSelect";
+import Select from "react-select";
 import axiosInstance from "../axiosConfig";
-
-export type Video = {
-  _id: string; // Include _id to represent the videoId
-  title: string;
-  url: string;
-  thumbnail: string;
-};
+import { Video } from "./List";
+import { fetchData } from "../fetchdata";
 
 export default function Form({
   setIsCreate,
@@ -21,8 +16,9 @@ export default function Form({
   videoList: Video[];
 }) {
   const [todoText, setTodoText] = useState("");
-  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]); // Store only video IDs
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
 
   useEffect(() => {
     const userDetails = localStorage.getItem("userDetails");
@@ -50,13 +46,14 @@ export default function Form({
 
       const response = await axiosInstance.post("/todo/create", {
         title: todoText,
-        videoId: selectedVideoIds, // Send only the video IDs
+        videoId: selectedVideoIds,
       });
 
       setIsCreate(!!response.data);
       setTodoText("");
-      setSelectedVideoIds([]); // Clear selected videos after submission
+      setSelectedVideoIds([]);
       setErrors("");
+      fetchData(token || "", () => setIsCreate(false), setErrors);
     } catch (error) {
       console.error("Error posting data:", error);
       setErrors("Error posting data: " + error);
@@ -68,16 +65,18 @@ export default function Form({
     setErrors("");
   };
 
-  // Handle video selection and store only video IDs
-  const handleVideoSelect = (selectedOptions: any) => {
+  const handleVideoSelection = (selectedOptions: any) => {
     const selected = selectedOptions.map((option: any) => ({
-      _id: option.value, // Assuming the value is the _id of the video
       title: option.label,
-      url: option.url,
-      thumbnail: option.thumbnail,
+      url: option.value,
     }));
-    VideoSelect(selected);
+    setSelectedVideos(selected);
   };
+
+  const videoOptions = videoList?.map((video: any) => ({
+    label: video?.title,
+    value: video?.url,
+  }));
 
   return (
     <form
@@ -99,12 +98,13 @@ export default function Form({
         </label>
         <div className="">
           <h3 className="text-lg font-semibold mb-2">Select Videos</h3>
-          <VideoSelect
-            videoList={videoList}
-            selectedVideos={videoList.filter((video) =>
-              selectedVideoIds.includes(video._id)
-            )}
-            onVideoSelect={handleVideoSelect} // This function should return an array of Video objects, including the _id
+
+          <Select
+            isMulti
+            options={videoOptions}
+            onChange={handleVideoSelection}
+            placeholder="Choose videos..."
+            className="w-[21rem]"
           />
         </div>
         <button

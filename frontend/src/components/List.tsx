@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { FaRegEdit } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import Form from "./Form";
-import VideoSelect from "./VideoSelect";
 import { GlobalContext } from "./UserContext";
 import axiosInstance from "../axiosConfig";
+import { fetchData } from "../fetchdata";
 
 export type Video = {
   _id: string;
@@ -36,30 +36,6 @@ const List: React.FC = () => {
 
   const { userDetails } = useContext(GlobalContext);
 
-  async function fetchData() {
-    try {
-      if (!token) {
-        setError("Authorization token is missing.");
-        return;
-      }
-
-      const response = await axiosInstance.get("/todo/get");
-
-      if (response && response.data && response.data.data) {
-        const initialTodos: TodoItem[] = response.data.data.map(
-          (item: any) => ({
-            ...item,
-            checked: item.status === "Completed",
-          })
-        );
-        setTodos(initialTodos);
-      }
-    } catch (error) {
-      console.error("Error fetching todos:", error);
-      setError("Error fetching todos: " + error);
-    }
-  }
-
   const fetchAvailableVideos = async () => {
     try {
       const response = await axiosInstance.get(`/user/get-videos/`);
@@ -77,7 +53,7 @@ const List: React.FC = () => {
 
   useEffect(() => {
     if (userDetails) {
-      fetchData();
+      fetchData(token || "", setTodos, setError);
       fetchAvailableVideos();
     }
   }, [isCreate, token, userDetails]);
@@ -126,7 +102,7 @@ const List: React.FC = () => {
       setError("");
       setEditId("");
       setEditTitle("");
-      fetchData();
+      fetchData(token || "", setTodos, setError);
     } catch (error) {
       console.error("Error updating todo:", error);
       setError("Error updating todo: " + error);
@@ -145,7 +121,7 @@ const List: React.FC = () => {
       setTodos((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
       setError("");
       setDeleteConfirmationId("");
-      fetchData();
+      fetchData(token || "", setTodos, setError);
     } catch (error) {
       console.error("Error deleting todo:", error);
       setError("Error deleting todo: " + error);
@@ -225,7 +201,7 @@ const List: React.FC = () => {
               <div className="flex gap-4 items-center w-80 overflow-scroll">
                 <input
                   type="checkbox"
-                  // checked={item.checked}
+                  checked={item.checked}
                   onClick={() => setError("")}
                   onChange={() => handleChange(item._id)}
                   className="cursor-pointer"
