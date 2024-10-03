@@ -5,6 +5,7 @@ import { CustomRequest } from "../middlewares/tokenVerify";
 import { todoValidation } from "../validators/todoValidators";
 import { catchBlock } from "../helper/commonCode";
 
+// Create a new todo with associated video ID(s)
 const postTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { videoId, title } = req.body;
@@ -27,7 +28,7 @@ const postTodo = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to get all todos
+// Get all todos along with video data
 const getTodos = async (req: Request, res: Response): Promise<Response> => {
   try {
     const userId = (req as CustomRequest).userId;
@@ -41,6 +42,10 @@ const getTodos = async (req: Request, res: Response): Promise<Response> => {
 
     const data = await todoModel
       .find(filter)
+      .populate({
+        path: "video",
+        select: "title url thumbnail", // Populate the video data
+      })
       .select("title userId status video");
 
     return res.status(200).send({
@@ -56,11 +61,15 @@ const getTodos = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to get a todo by its ID
+// Get a single todo by its ID
 const getTodoById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const data = await todoModel
       .findById(req.query.id)
+      .populate({
+        path: "video",
+        select: "title url thumbnail",
+      })
       .select("title userId status video");
 
     return res.status(200).send({
@@ -76,12 +85,12 @@ const getTodoById = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to update a todo by its ID
+// Update a todo with associated video ID(s)
 const updateTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { videoId, ...todo } = req.body;
 
-    todoValidation.parse({ ...todo, videoId }); 
+    todoValidation.parse({ ...todo, videoId });
 
     if (videoId && Array.isArray(videoId)) {
       for (const id of videoId) {
@@ -99,6 +108,10 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
         { ...todo, video: videoId }, // Update with the array of video IDs
         { new: true }
       )
+      .populate({
+        path: "video",
+        select: "title url thumbnail",
+      })
       .select("title userId status video");
 
     return res.status(200).send({
@@ -110,7 +123,7 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Controller function to delete a todo by its ID
+// Delete a todo by its ID
 const deleteTodo = async (
   req: Request<{ id: string }>,
   res: Response

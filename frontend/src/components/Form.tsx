@@ -18,7 +18,7 @@ export default function Form({
   const [todoText, setTodoText] = useState("");
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<any[]>([]);
 
   useEffect(() => {
     const userDetails = localStorage.getItem("userDetails");
@@ -51,7 +51,8 @@ export default function Form({
 
       setIsCreate(!!response.data);
       setTodoText("");
-      setSelectedVideoIds([]);
+      setSelectedVideoIds([]); // Clear selected video IDs
+      setSelectedVideos([]); // Clear selected videos in the Select component
       setErrors("");
       fetchData(token || "", () => setIsCreate(false), setErrors);
     } catch (error) {
@@ -66,16 +67,14 @@ export default function Form({
   };
 
   const handleVideoSelection = (selectedOptions: any) => {
-    const selected = selectedOptions.map((option: any) => ({
-      title: option.label,
-      url: option.value,
-    }));
-    setSelectedVideos(selected);
+    const selectedIds = selectedOptions.map((option: any) => option.value); // Collect video IDs
+    setSelectedVideoIds(selectedIds); // Update selectedVideoIds state
+    setSelectedVideos(selectedOptions); // Update selected videos for the Select component
   };
 
   const videoOptions = videoList?.map((video: any) => ({
     label: video?.title,
-    value: video?.url,
+    value: video?._id, // Use video ID as the value
   }));
 
   return (
@@ -103,6 +102,7 @@ export default function Form({
             isMulti
             options={videoOptions}
             onChange={handleVideoSelection}
+            value={selectedVideos} // Control the value of the Select component
             placeholder="Choose videos..."
             className="w-[21rem]"
           />
