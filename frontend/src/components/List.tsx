@@ -56,7 +56,7 @@ const List: React.FC = () => {
       fetchData(token || "", setTodos, setError);
       fetchAvailableVideos();
     }
-  }, [isCreate, token, userDetails]);
+  }, [isCreate, userDetails]);
 
   const handleEdit = (id: string, title: string, videos?: Video[]) => {
     const task = todos.find((todo) => todo._id === id);

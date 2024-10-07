@@ -4,23 +4,24 @@ import queryString from "query-string";
 import { Link } from "react-router-dom";
 
 export default function VerifyUser() {
-  const parsed = queryString.parse(location.search);
+  const parsed = queryString.parse(window.location.search); // Fix location reference
+
   const verifyEmail = async () => {
     try {
-      const token = parsed.token;
+      const token = parsed.token; // Extract token from the URL
+      console.log("Token from query string:", token); // Log the token
 
       if (token) {
         const response = await axios.post(
           "http://localhost:4001/user/verify-email",
-          {
-            token: token,
-          }
+          { token: token } // Pass token in the request body
         );
+        console.log("Email verification successful", response.data);
       } else {
         console.log("Token not found in query string");
       }
     } catch (err) {
-      console.log("Error", err);
+      console.log("Error during email verification", err);
     }
   };
 

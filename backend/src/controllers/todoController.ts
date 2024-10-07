@@ -124,10 +124,7 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
 };
 
 // Delete a todo by its ID
-const deleteTodo = async (
-  req: Request<{ id: string }>,
-  res: Response
-): Promise<Response> => {
+const deleteTodo = async (req: Request<{ id: string }>, res: Response): Promise<Response> => {
   try {
     const data = await todoModel.findByIdAndDelete(req.query.id);
     return res.status(200).send({

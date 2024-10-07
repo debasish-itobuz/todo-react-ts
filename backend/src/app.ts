@@ -1,4 +1,9 @@
-import express, { Application, ErrorRequestHandler } from "express";
+import express, {
+  Application,
+  ErrorRequestHandler,
+  Request,
+  Response,
+} from "express";
 import { config } from "dotenv";
 config();
 import { env } from "./env";
@@ -24,7 +29,12 @@ app.use("/user", userRoutes);
 app.use("/todo", todoRoutes);
 
 // Error handler middleware
-const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+const errorHandler: ErrorRequestHandler = (
+  err,
+  req: Request,
+  res: Response,
+  next
+) => {
   console.log({ err });
   if (err) {
     res.status(err.status || 500);
