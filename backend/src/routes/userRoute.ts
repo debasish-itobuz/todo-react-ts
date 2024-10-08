@@ -13,6 +13,7 @@ import {
   uploadVideo,
   deleteVideo,
   getUserVideos,
+  downloadVideo,
 } from "../controllers/videoController";
 import upload from "../multerConfig";
 import verifyToken from "../middlewares/tokenVerify";
@@ -36,6 +37,7 @@ router.post(
 
 router.post("/upload-video", upload.single("videos"), uploadVideo);
 router.get("/get-videos", getUserVideos);
+router.get("/download-video", downloadVideo); 
 router.delete("/delete-video", deleteVideo);
 
 export default router;

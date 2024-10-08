@@ -183,30 +183,6 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-// const verifyEmail = async (req: Request, res: Response) => {
-//   const { token } = req.body;
-
-//   try {
-//     const user = await userModel.findOne({
-//       verificationToken: token,
-//     });
-
-//     if (!user) {
-//       return res.status(404).json({ error: "User not found or token expired" });
-//     }
-
-//     user.verified = true;
-//     user.verificationToken = "";
-
-//     await user.save();
-
-//     res.status(200).json({ message: "Email verified successfully" });
-//   } catch (error) {
-//     console.error("Error verifying email:", error);
-//     res.status(500).json({ error: "Failed to verify email" });
-//   }
-// };
-
 const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.body; // Extract token from request body
   console.log(token);

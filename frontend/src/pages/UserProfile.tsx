@@ -268,6 +268,39 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const downloadVideo = async (videoId: string, videoTitle: string) => {
+    try {
+      if (!videoId) {
+        setFormError("Failed to identify video ID.");
+        setTimeout(() => setFormError(""), 2000);
+        return;
+      }
+
+      const response = await axiosInstance.get(
+        `/user/download-video?videoId=${videoId}`,
+        {
+          responseType: "blob", // important for handling binary data
+        }
+      );
+
+      // Create a link element, set the URL and trigger a download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", videoTitle); // Use video title as the filename
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error("Error downloading video:", error);
+      setFormError("Failed to download video. Please try again.");
+      setTimeout(() => setFormError(""), 2000);
+    }
+  };
+
   const deleteVideo = async (video_id: string) => {
     try {
       const videoId = video_id;
@@ -619,6 +652,14 @@ const UserProfile: React.FC = () => {
                       <span className="font-medium text-gray-700">
                         {video.title}
                       </span>
+                      <button
+                        className="ms-2 text-blue-500 font-extrabold"
+                        type="button"
+                        onClick={() => downloadVideo(video._id, video.title)}
+                      >
+                        Download
+                      </button>
+
                       <button
                         className="ms-2 text-red-500 font-extrabold"
                         type="button"
