@@ -16,10 +16,8 @@ export const sendVerificationEmail = async (
   toEmail: string,
   verificationToken: string | null
 ): Promise<boolean> => {
-  // Construct the verification link using your frontend URL and the token
   const verificationLink = `http://localhost:5173/verify-email?token=${verificationToken}`;
 
-  // Set up email options
   const mailOptions = {
     from: process.env.EMAIL_USER!,
     to: toEmail,
@@ -27,10 +25,31 @@ export const sendVerificationEmail = async (
     text: `Hello, please click on the following link to verify your email: ${verificationLink}`,
   };
 
-  // Send the email
   try {
     await transporter.sendMail(mailOptions);
     console.log("Verification link sent successfully!");
+    return true;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return false;
+  }
+};
+
+// Function to send a task completion email
+export const sendTaskCompletionEmail = async (
+  toEmail: string,
+  taskTitle: string
+): Promise<boolean> => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER!,
+    to: toEmail,
+    subject: "Task Completed",
+    text: `Hello, your task titled "${taskTitle}" has been completed.`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Task completion email sent successfully!");
     return true;
   } catch (error) {
     console.error("Error sending email:", error);

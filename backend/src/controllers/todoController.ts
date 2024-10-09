@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import { CustomRequest } from "../middlewares/tokenVerify";
 import { todoValidation } from "../validators/todoValidators";
 import { catchBlock } from "../helper/commonCode";
+import { sendTaskCompletionEmail } from "../EmailVerify/mailVerify"; // Import the sendTaskCompletionEmail function
+import userModel from "../models/userModel"; // Import the user model
 
 // Create a new todo with associated video ID(s)
 const postTodo = async (req: Request, res: Response): Promise<Response> => {
@@ -85,7 +87,7 @@ const getTodoById = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-// Update a todo with associated video ID(s)
+// Update a todo with associated video ID(s) and trigger email on completion
 const updateTodo = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { videoId, ...todo } = req.body;
@@ -101,11 +103,10 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
       }
     }
 
-    // Update the todo with multiple video IDs
     const data = await todoModel
       .findByIdAndUpdate(
         req.query.id,
-        { ...todo, video: videoId }, // Update with the array of video IDs
+        { ...todo, video: videoId },
         { new: true }
       )
       .populate({
@@ -113,6 +114,19 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
         select: "title url thumbnail",
       })
       .select("title userId status video");
+
+    // Fetch the user details based on the userId from the todo data
+    const user = await userModel.findById(data?.userId).select("email");
+
+    if (!user) {
+      return res.status(400).send({ message: "User not found" });
+    }
+
+    // Check if the status is changed to "Completed"
+    if (data?.status === "Completed") {
+      const userEmail = user.email; // Get the user's email
+      await sendTaskCompletionEmail(userEmail, data.title); // Send the task completion email
+    }
 
     return res.status(200).send({
       data: data,
@@ -122,6 +136,7 @@ const updateTodo = async (req: Request, res: Response): Promise<Response> => {
     return catchBlock(e, res, "Data not updated");
   }
 };
+
 
 // Delete a todo by its ID
 const deleteTodo = async (req: Request<{ id: string }>, res: Response): Promise<Response> => {
